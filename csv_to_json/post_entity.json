@@ -1,0 +1,157 @@
+curl -X POST \
+  http://localhost:21000/api/atlas/v2/entity \
+  -H 'authorization: Basic YWRtaW46YWRtaW4=' \
+  -H 'content-type: application/json' \
+  -d '{
+  "entity":
+    {
+      "guid": "-208942807557404",
+      "status": "ACTIVE",
+      "version": 0,
+      "typeName": "hive_table",
+      "attributes": {
+        "owner": "hive",
+        "temporary": false,
+        "name": "test_table_0001",
+        "qualifiedName": "my_db.test_table_0001@hdp_cluster",
+        "columns": [
+          {
+            "guid": "-208942807557402",
+            "typeName": "hive_column"
+          },
+          {
+            "guid": "-208942807557401",
+            "typeName": "hive_column"
+          },
+          {
+            "guid": "-208942807557400",
+            "typeName": "hive_column"
+          }
+        ],
+        "tableType": "MANAGED_TABLE",
+        "sd": {
+          "guid": "-208942807557403",
+          "typeName": "hive_storagedesc"
+        },
+        "partitionKeys": [
+          {
+            "guid": "-208942807557405",
+            "typeName": "hive_column"
+          }
+        ],
+        "parameters": {
+          "totalSize": "0",
+          "rawDataSize": "0",
+          "numRows": "0",
+          "COLUMN_STATS_ACCURATE": "{\"BASIC_STATS\":\"true\"}",
+          "numFiles": "0",
+          "transient_lastDdlTime": "1497764442"
+        },
+        "db": {
+          "guid": "90a7d3af-873a-4c10-a815-069f2d47d490",
+          "typeName": "hive_db"
+        },
+        "retention": 0
+      }
+    }
+  ,
+  "referredEntities": {
+    "-208942807557403": {
+      "guid": "-208942807557403",
+      "status": "ACTIVE",
+      "version": 0,
+      "typeName": "hive_storagedesc",
+      "attributes": {
+        "qualifiedName": "my_db.test_table_0001@hdp_cluster_storage",
+        "storedAsSubDirectories": false,
+        "location": "hdfs://localhost.localdomain:8020/apps/hive/warehouse/my_db.db/test_table_0001",
+        "compressed": false,
+        "inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+        "outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+        "parameters": {},
+        "serdeInfo": {
+          "typeName": "hive_serde",
+          "attributes": {
+            "serializationLib": "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe",
+            "parameters": {
+              "serialization.format": "1"
+            }
+          }
+        },
+        "table": {
+          "guid": "-208942807557404",
+          "typeName": "hive_table"
+        },
+        "numBuckets": -1
+      }
+    },
+    "-208942807557402": {
+      "guid": "-208942807557402",
+      "status": "ACTIVE",
+      "version": 0,
+      "typeName": "hive_column",
+      "attributes": {
+        "owner": "hive",
+        "qualifiedName": "my_db.test_table_0001.col1@hdp_cluster",
+        "name": "col1",
+        "position": 0,
+        "type": "int",
+        "table": {
+          "guid": "-208942807557404",
+          "typeName": "hive_table"
+        }
+      }
+    },
+    "-208942807557401": {
+      "guid": "-208942807557401",
+      "status": "ACTIVE",
+      "version": 0,
+      "typeName": "hive_column",
+      "attributes": {
+        "owner": "hive",
+        "qualifiedName": "my_db.test_table_0001.col2@hdp_cluster",
+        "name": "col2",
+        "position": 1,
+        "type": "string",
+        "table": {
+          "guid": "-208942807557404",
+          "typeName": "hive_table"
+        }
+      }
+    },
+    "-208942807557400": {
+      "guid": "-208942807557400",
+      "status": "ACTIVE",
+      "version": 0,
+      "typeName": "hive_column",
+      "attributes": {
+        "owner": "hive",
+        "qualifiedName": "my_db.test_table_0001.col3@hdp_cluster",
+        "name": "col3",
+        "position": 2,
+        "type": "string",
+        "table": {
+          "guid": "-208942807557404",
+          "typeName": "hive_table"
+        }
+      }
+    },
+    "-208942807557405": {
+      "guid": "-208942807557405",
+      "status": "ACTIVE",
+      "version": 0,
+      "typeName": "hive_column",
+      "attributes": {
+        "owner": "hive",
+        "qualifiedName": "my_db.test_table_0001.col4@hdp_cluster",
+        "name": "col4",
+        "position": 5,
+        "type": "string",
+        "table": {
+          "guid": "-208942807557404",
+          "typeName": "hive_table"
+        }
+      }
+    }
+  }
+}'

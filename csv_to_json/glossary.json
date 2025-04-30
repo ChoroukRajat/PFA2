@@ -1,0 +1,95 @@
+[
+    {
+        "guid": "1bccff91-2770-46b8-b21a-d809c1d15baa",
+        "qualifiedName": "Telecom",
+        "name": "Telecom",
+        "terms": [
+            {
+                "termGuid": "b49a0a57-7544-4c18-8efe-4c6496ee85ab",
+                "relationGuid": "a36ded56-5224-417b-bc9d-574a5465c571",
+                "displayText": "LANDLINE"
+            },
+            {
+                "termGuid": "cc250ab4-fc92-440c-8b49-0c280d7bb908",
+                "relationGuid": "afde1f4d-e3bc-4cd8-b35c-7e219dca5924",
+                "displayText": "INTERACTIVE VIDEO DATA SERVICE (IVDS)"
+            },
+            {
+                "termGuid": "7c68c3dc-34ab-4352-807d-9bd46f062752",
+                "relationGuid": "617e6b22-f9a9-4e81-81ff-5e3c493b911f",
+                "displayText": "CELLULAR TECHNOLOGY"
+            }
+        ],
+        "categories": [
+            {
+                "categoryGuid": "14260ac1-9414-4534-9b46-ad9b861be56d",
+                "relationGuid": "bd5a24d9-2d93-4dea-8733-2fba0c451586",
+                "displayText": "Telecom Services"
+            }
+        ]
+    },
+    {
+        "guid": "3a8122f4-6632-47eb-a432-bff9a137fe11",
+        "qualifiedName": "Insurance",
+        "name": "Insurance",
+        "terms": [
+            {
+                "termGuid": "f9af4de2-8808-41b1-b429-24db4f360e5b",
+                "relationGuid": "3d8db0c9-e431-4d49-85c7-6257bd57cab7",
+                "displayText": "Adjuster"
+            },
+            {
+                "termGuid": "d81f9c88-a576-4c45-8f6a-1143c1d23664",
+                "relationGuid": "b6abf282-0791-4b28-9212-3ff1bb397500",
+                "displayText": "Appraisal"
+            },
+            {
+                "termGuid": "7c9da566-80e8-4cb4-89d8-1310f8945fb8",
+                "relationGuid": "dbf55158-dd30-4449-9a55-f13039b1425a",
+                "displayText": "Annuity"
+            },
+            {
+                "termGuid": "25f2800d-1a88-4a2c-a6c9-368f19ce6116",
+                "relationGuid": "e10fbd0f-9afa-405d-914d-4b61a4313f60",
+                "displayText": "Actual Cash Value"
+            },
+            {
+                "termGuid": "eabf7858-bc58-46b7-a823-5d1ccda3de05",
+                "relationGuid": "d4c235eb-4269-40cd-aace-97fb6fc93b1e",
+                "displayText": "Assessed Value"
+            },
+            {
+                "termGuid": "eb83b51b-8a36-4865-8589-b0afdd995e66",
+                "relationGuid": "53ed947a-9aa9-4228-bb98-d9c91a47d180",
+                "displayText": "Agent"
+            }
+        ]
+    },
+    {
+        "guid": "5784d99a-78c3-460c-821e-108daf9ac976",
+        "qualifiedName": "Automotive",
+        "name": "Automotive",
+        "terms": [
+            {
+                "termGuid": "be7fb23a-418d-411a-ad43-31964a670293",
+                "relationGuid": "ead5e0f9-26bd-491b-bbc7-4f167671131f",
+                "displayText": "Air Conditioning"
+            },
+            {
+                "termGuid": "b68c6d10-0689-445c-95cc-6a21ddc1f542",
+                "relationGuid": "7afcc521-f01a-42bf-928c-35b81dfb981a",
+                "displayText": "ABS"
+            },
+            {
+                "termGuid": "862045fc-e330-433a-b3e5-a5be3cc287b0",
+                "relationGuid": "a4ea6e29-b8dc-42b3-bed3-ae38922db8a3",
+                "displayText": "Adaptive Cruise Control"
+            },
+            {
+                "termGuid": "b452ab18-834c-46a5-b24c-0a56b7a19c3b",
+                "relationGuid": "ff4f71f9-9a3d-44a9-9353-f4ce08908156",
+                "displayText": "Anti-theft Alarm"
+            }
+        ]
+    }
+]

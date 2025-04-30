@@ -1,0 +1,188 @@
+{
+    "queryType": "DSL",
+    "queryText": "from AtlasGlossaryTerm",
+    "entities": [
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "Air Conditioning@Automotive",
+                "name": "Air Conditioning"
+            },
+            "guid": "be7fb23a-418d-411a-ad43-31964a670293",
+            "status": "ACTIVE",
+            "displayText": "Air Conditioning",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "Appraisal@Insurance",
+                "name": "Appraisal"
+            },
+            "guid": "d81f9c88-a576-4c45-8f6a-1143c1d23664",
+            "status": "ACTIVE",
+            "displayText": "Appraisal",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "ABS@Automotive",
+                "name": "ABS"
+            },
+            "guid": "b68c6d10-0689-445c-95cc-6a21ddc1f542",
+            "status": "ACTIVE",
+            "displayText": "ABS",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "Adaptive Cruise Control@Automotive",
+                "name": "Adaptive Cruise Control"
+            },
+            "guid": "862045fc-e330-433a-b3e5-a5be3cc287b0",
+            "status": "ACTIVE",
+            "displayText": "Adaptive Cruise Control",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "LANDLINE@Telecom",
+                "name": "LANDLINE"
+            },
+            "guid": "b49a0a57-7544-4c18-8efe-4c6496ee85ab",
+            "status": "ACTIVE",
+            "displayText": "LANDLINE",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "CELLULAR TECHNOLOGY@Telecom",
+                "name": "CELLULAR TECHNOLOGY"
+            },
+            "guid": "7c68c3dc-34ab-4352-807d-9bd46f062752",
+            "status": "ACTIVE",
+            "displayText": "CELLULAR TECHNOLOGY",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "Anti-theft Alarm@Automotive",
+                "name": "Anti-theft Alarm"
+            },
+            "guid": "b452ab18-834c-46a5-b24c-0a56b7a19c3b",
+            "status": "ACTIVE",
+            "displayText": "Anti-theft Alarm",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "INTERACTIVE VIDEO DATA SERVICE (IVDS)@Telecom",
+                "name": "INTERACTIVE VIDEO DATA SERVICE (IVDS)"
+            },
+            "guid": "cc250ab4-fc92-440c-8b49-0c280d7bb908",
+            "status": "ACTIVE",
+            "displayText": "INTERACTIVE VIDEO DATA SERVICE (IVDS)",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "Adjuster@Insurance",
+                "name": "Adjuster"
+            },
+            "guid": "f9af4de2-8808-41b1-b429-24db4f360e5b",
+            "status": "ACTIVE",
+            "displayText": "Adjuster",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "Actual Cash Value@Insurance",
+                "name": "Actual Cash Value"
+            },
+            "guid": "25f2800d-1a88-4a2c-a6c9-368f19ce6116",
+            "status": "ACTIVE",
+            "displayText": "Actual Cash Value",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "Assessed Value@Insurance",
+                "name": "Assessed Value"
+            },
+            "guid": "eabf7858-bc58-46b7-a823-5d1ccda3de05",
+            "status": "ACTIVE",
+            "displayText": "Assessed Value",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "Agent@Insurance",
+                "name": "Agent"
+            },
+            "guid": "eb83b51b-8a36-4865-8589-b0afdd995e66",
+            "status": "ACTIVE",
+            "displayText": "Agent",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "AtlasGlossaryTerm",
+            "attributes": {
+                "qualifiedName": "Annuity@Insurance",
+                "name": "Annuity"
+            },
+            "guid": "7c9da566-80e8-4cb4-89d8-1310f8945fb8",
+            "status": "ACTIVE",
+            "displayText": "Annuity",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        }
+    ]
+}

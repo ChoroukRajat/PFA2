@@ -1,0 +1,739 @@
+{
+    "referredEntities": {
+        "94e047cf-8af3-411a-be0a-1d27bfbe4083": {
+            "typeName": "hbase_column_family",
+            "attributes": {
+                "prefetchBlocksOnOpen": false,
+                "modifiedTime": 0,
+                "columns": null,
+                "encryptionType": null,
+                "description": "e",
+                "compressionType": "NONE",
+                "maxVersions": 1,
+                "evictBlocksOnClose": false,
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table"
+                },
+                "cacheDataOnWrite": false,
+                "newVersionBehavior": false,
+                "owner": "atlas",
+                "inMemoryCompactionPolicy": null,
+                "dataBlockEncoding": "NONE",
+                "qualifiedName": "default:atlas_janus.e@Sandbox",
+                "StoragePolicy": null,
+                "ttl": 2147483647,
+                "cacheIndexesOnWrite": false,
+                "bloomFilterType": "ROW",
+                "mobCompactPartitionPolicy": "DAILY",
+                "cacheBloomsOnWrite": false,
+                "createTime": 0,
+                "name": "e",
+                "compactionCompressionType": "NONE",
+                "keepDeletedCells": false,
+                "blockCacheEnabled": true,
+                "isMobEnabled": false,
+                "minVersions": 0
+            },
+            "guid": "94e047cf-8af3-411a-be0a-1d27bfbe4083",
+            "status": "ACTIVE",
+            "createdBy": "atlas",
+            "updatedBy": "atlas",
+            "createTime": 1543518109616,
+            "updateTime": 1543518118076,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "columns": [],
+                "meanings": [],
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "atlas_janus",
+                    "relationshipGuid": "90c929af-6c71-4e77-9934-a06c0b7da6d8",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "50138fe4-8d5a-463e-8f66-cf1e220d3ae3": {
+            "typeName": "hbase_column_family",
+            "attributes": {
+                "prefetchBlocksOnOpen": false,
+                "modifiedTime": 1543517998208,
+                "columns": null,
+                "encryptionType": null,
+                "description": "s",
+                "compressionType": "GZ",
+                "maxVersions": 1,
+                "evictBlocksOnClose": false,
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table"
+                },
+                "cacheDataOnWrite": false,
+                "newVersionBehavior": false,
+                "owner": "atlas",
+                "inMemoryCompactionPolicy": null,
+                "dataBlockEncoding": "NONE",
+                "qualifiedName": "default:atlas_janus.s@Sandbox",
+                "StoragePolicy": null,
+                "ttl": 2147483647,
+                "cacheIndexesOnWrite": false,
+                "bloomFilterType": "ROW",
+                "mobCompactPartitionPolicy": "DAILY",
+                "cacheBloomsOnWrite": false,
+                "createTime": 1543517998208,
+                "name": "s",
+                "compactionCompressionType": "GZ",
+                "keepDeletedCells": false,
+                "blockCacheEnabled": true,
+                "isMobEnabled": false,
+                "minVersions": 0
+            },
+            "guid": "50138fe4-8d5a-463e-8f66-cf1e220d3ae3",
+            "status": "ACTIVE",
+            "createdBy": "atlas",
+            "updatedBy": "atlas",
+            "createTime": 1543518099200,
+            "updateTime": 1543518118076,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "columns": [],
+                "meanings": [],
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "atlas_janus",
+                    "relationshipGuid": "cac7220d-e6ae-4ed2-9544-4cfc09a79294",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "8d39303b-3a50-4389-97fd-aa431711fdca": {
+            "typeName": "hbase_column_family",
+            "attributes": {
+                "prefetchBlocksOnOpen": false,
+                "modifiedTime": 0,
+                "columns": null,
+                "encryptionType": null,
+                "description": "f",
+                "compressionType": "NONE",
+                "maxVersions": 1,
+                "evictBlocksOnClose": false,
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table"
+                },
+                "cacheDataOnWrite": false,
+                "newVersionBehavior": false,
+                "owner": "atlas",
+                "inMemoryCompactionPolicy": null,
+                "dataBlockEncoding": "NONE",
+                "qualifiedName": "default:atlas_janus.f@Sandbox",
+                "StoragePolicy": null,
+                "ttl": 2147483647,
+                "cacheIndexesOnWrite": false,
+                "bloomFilterType": "ROW",
+                "mobCompactPartitionPolicy": "DAILY",
+                "cacheBloomsOnWrite": false,
+                "createTime": 0,
+                "name": "f",
+                "compactionCompressionType": "NONE",
+                "keepDeletedCells": false,
+                "blockCacheEnabled": true,
+                "isMobEnabled": false,
+                "minVersions": 0
+            },
+            "guid": "8d39303b-3a50-4389-97fd-aa431711fdca",
+            "status": "ACTIVE",
+            "createdBy": "atlas",
+            "updatedBy": "atlas",
+            "createTime": 1543518111010,
+            "updateTime": 1543518118076,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "columns": [],
+                "meanings": [],
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "atlas_janus",
+                    "relationshipGuid": "2bbacadb-7229-44a8-b2f0-aca7c2e82a79",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "a95ed9aa-6768-48fa-bb07-bf8ecf13518a": {
+            "typeName": "hbase_column_family",
+            "attributes": {
+                "prefetchBlocksOnOpen": false,
+                "modifiedTime": 0,
+                "columns": null,
+                "encryptionType": null,
+                "description": "h",
+                "compressionType": "NONE",
+                "maxVersions": 1,
+                "evictBlocksOnClose": false,
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table"
+                },
+                "cacheDataOnWrite": false,
+                "newVersionBehavior": false,
+                "owner": "atlas",
+                "inMemoryCompactionPolicy": null,
+                "dataBlockEncoding": "NONE",
+                "qualifiedName": "default:atlas_janus.h@Sandbox",
+                "StoragePolicy": null,
+                "ttl": 2147483647,
+                "cacheIndexesOnWrite": false,
+                "bloomFilterType": "ROW",
+                "mobCompactPartitionPolicy": "DAILY",
+                "cacheBloomsOnWrite": false,
+                "createTime": 0,
+                "name": "h",
+                "compactionCompressionType": "NONE",
+                "keepDeletedCells": false,
+                "blockCacheEnabled": true,
+                "isMobEnabled": false,
+                "minVersions": 0
+            },
+            "guid": "a95ed9aa-6768-48fa-bb07-bf8ecf13518a",
+            "status": "ACTIVE",
+            "createdBy": "atlas",
+            "updatedBy": "atlas",
+            "createTime": 1543518113660,
+            "updateTime": 1543518118076,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "columns": [],
+                "meanings": [],
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "atlas_janus",
+                    "relationshipGuid": "5e8e907c-e781-4985-8634-10615f29b9ae",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "b8f7d7db-a4ae-406b-95fb-0f49ff561b7e": {
+            "typeName": "hbase_column_family",
+            "attributes": {
+                "prefetchBlocksOnOpen": false,
+                "modifiedTime": 0,
+                "columns": null,
+                "encryptionType": null,
+                "description": "g",
+                "compressionType": "NONE",
+                "maxVersions": 1,
+                "evictBlocksOnClose": false,
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table"
+                },
+                "cacheDataOnWrite": false,
+                "newVersionBehavior": false,
+                "owner": "atlas",
+                "inMemoryCompactionPolicy": null,
+                "dataBlockEncoding": "NONE",
+                "qualifiedName": "default:atlas_janus.g@Sandbox",
+                "StoragePolicy": null,
+                "ttl": 2147483647,
+                "cacheIndexesOnWrite": false,
+                "bloomFilterType": "ROW",
+                "mobCompactPartitionPolicy": "DAILY",
+                "cacheBloomsOnWrite": false,
+                "createTime": 0,
+                "name": "g",
+                "compactionCompressionType": "NONE",
+                "keepDeletedCells": false,
+                "blockCacheEnabled": true,
+                "isMobEnabled": false,
+                "minVersions": 0
+            },
+            "guid": "b8f7d7db-a4ae-406b-95fb-0f49ff561b7e",
+            "status": "ACTIVE",
+            "createdBy": "atlas",
+            "updatedBy": "atlas",
+            "createTime": 1543518112284,
+            "updateTime": 1543518118076,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "columns": [],
+                "meanings": [],
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "atlas_janus",
+                    "relationshipGuid": "d2cd6bd8-ea7f-456d-aaf0-aba530a981af",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "1491be7c-f101-4428-ad36-0f3d3a487080": {
+            "typeName": "hbase_column_family",
+            "attributes": {
+                "prefetchBlocksOnOpen": false,
+                "modifiedTime": 0,
+                "columns": null,
+                "encryptionType": null,
+                "description": "i",
+                "compressionType": "NONE",
+                "maxVersions": 1,
+                "evictBlocksOnClose": false,
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table"
+                },
+                "cacheDataOnWrite": false,
+                "newVersionBehavior": false,
+                "owner": "atlas",
+                "inMemoryCompactionPolicy": null,
+                "dataBlockEncoding": "NONE",
+                "qualifiedName": "default:atlas_janus.i@Sandbox",
+                "StoragePolicy": null,
+                "ttl": 2147483647,
+                "cacheIndexesOnWrite": false,
+                "bloomFilterType": "ROW",
+                "mobCompactPartitionPolicy": "DAILY",
+                "cacheBloomsOnWrite": false,
+                "createTime": 0,
+                "name": "i",
+                "compactionCompressionType": "NONE",
+                "keepDeletedCells": false,
+                "blockCacheEnabled": true,
+                "isMobEnabled": false,
+                "minVersions": 0
+            },
+            "guid": "1491be7c-f101-4428-ad36-0f3d3a487080",
+            "status": "ACTIVE",
+            "createdBy": "atlas",
+            "updatedBy": "atlas",
+            "createTime": 1543518108421,
+            "updateTime": 1543518118076,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "columns": [],
+                "meanings": [],
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "atlas_janus",
+                    "relationshipGuid": "9b6fb0b3-526b-4477-86e2-b29ae33ad9f2",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "7e959240-a2d9-45aa-a75c-0291bd973df7": {
+            "typeName": "hbase_column_family",
+            "attributes": {
+                "prefetchBlocksOnOpen": false,
+                "modifiedTime": 0,
+                "columns": null,
+                "encryptionType": null,
+                "description": "l",
+                "compressionType": "NONE",
+                "maxVersions": 1,
+                "evictBlocksOnClose": false,
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table"
+                },
+                "cacheDataOnWrite": false,
+                "newVersionBehavior": false,
+                "owner": "atlas",
+                "inMemoryCompactionPolicy": null,
+                "dataBlockEncoding": "NONE",
+                "qualifiedName": "default:atlas_janus.l@Sandbox",
+                "StoragePolicy": null,
+                "ttl": 2147483647,
+                "cacheIndexesOnWrite": false,
+                "bloomFilterType": "ROW",
+                "mobCompactPartitionPolicy": "DAILY",
+                "cacheBloomsOnWrite": false,
+                "createTime": 0,
+                "name": "l",
+                "compactionCompressionType": "NONE",
+                "keepDeletedCells": false,
+                "blockCacheEnabled": true,
+                "isMobEnabled": false,
+                "minVersions": 0
+            },
+            "guid": "7e959240-a2d9-45aa-a75c-0291bd973df7",
+            "status": "ACTIVE",
+            "createdBy": "atlas",
+            "updatedBy": "atlas",
+            "createTime": 1543518115142,
+            "updateTime": 1543518118076,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "columns": [],
+                "meanings": [],
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "atlas_janus",
+                    "relationshipGuid": "81773719-6b76-4103-b6d8-92a553e72fae",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "19ad909e-8ef1-41c9-8a78-39ba0e2fc8e1": {
+            "typeName": "hbase_column_family",
+            "attributes": {
+                "prefetchBlocksOnOpen": false,
+                "modifiedTime": 0,
+                "columns": null,
+                "encryptionType": null,
+                "description": "m",
+                "compressionType": "NONE",
+                "maxVersions": 1,
+                "evictBlocksOnClose": false,
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table"
+                },
+                "cacheDataOnWrite": false,
+                "newVersionBehavior": false,
+                "owner": "atlas",
+                "inMemoryCompactionPolicy": null,
+                "dataBlockEncoding": "NONE",
+                "qualifiedName": "default:atlas_janus.m@Sandbox",
+                "StoragePolicy": null,
+                "ttl": 2147483647,
+                "cacheIndexesOnWrite": false,
+                "bloomFilterType": "ROW",
+                "mobCompactPartitionPolicy": "DAILY",
+                "cacheBloomsOnWrite": false,
+                "createTime": 0,
+                "name": "m",
+                "compactionCompressionType": "NONE",
+                "keepDeletedCells": false,
+                "blockCacheEnabled": true,
+                "isMobEnabled": false,
+                "minVersions": 0
+            },
+            "guid": "19ad909e-8ef1-41c9-8a78-39ba0e2fc8e1",
+            "status": "ACTIVE",
+            "createdBy": "atlas",
+            "updatedBy": "atlas",
+            "createTime": 1543518116734,
+            "updateTime": 1543518118076,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "columns": [],
+                "meanings": [],
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "atlas_janus",
+                    "relationshipGuid": "d9c6b3f3-e022-45cd-af9f-cf99719bd643",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "31d48ae7-8d4d-48c7-b68e-66c6510d1f64": {
+            "typeName": "hbase_column_family",
+            "attributes": {
+                "prefetchBlocksOnOpen": false,
+                "modifiedTime": 0,
+                "columns": null,
+                "encryptionType": null,
+                "description": "t",
+                "compressionType": "NONE",
+                "maxVersions": 1,
+                "evictBlocksOnClose": false,
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table"
+                },
+                "cacheDataOnWrite": false,
+                "newVersionBehavior": false,
+                "owner": "atlas",
+                "inMemoryCompactionPolicy": null,
+                "dataBlockEncoding": "NONE",
+                "qualifiedName": "default:atlas_janus.t@Sandbox",
+                "StoragePolicy": null,
+                "ttl": 2147483647,
+                "cacheIndexesOnWrite": false,
+                "bloomFilterType": "ROW",
+                "mobCompactPartitionPolicy": "DAILY",
+                "cacheBloomsOnWrite": false,
+                "createTime": 0,
+                "name": "t",
+                "compactionCompressionType": "NONE",
+                "keepDeletedCells": false,
+                "blockCacheEnabled": true,
+                "isMobEnabled": false,
+                "minVersions": 0
+            },
+            "guid": "31d48ae7-8d4d-48c7-b68e-66c6510d1f64",
+            "status": "ACTIVE",
+            "createdBy": "atlas",
+            "updatedBy": "atlas",
+            "createTime": 1543518118076,
+            "updateTime": 1543518118076,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "columns": [],
+                "meanings": [],
+                "table": {
+                    "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+                    "typeName": "hbase_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "atlas_janus",
+                    "relationshipGuid": "7c8cb85d-bb65-452d-b37c-ee50e38e6dce",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        }
+    },
+    "entity": {
+        "typeName": "hbase_table",
+        "attributes": {
+            "owner": "atlas",
+            "isNormalizationEnabled": false,
+            "modifiedTime": 1543518028624,
+            "qualifiedName": "default:atlas_janus@Sandbox",
+            "durability": "USE_DEFAULT",
+            "description": "atlas_janus",
+            "maxFileSize": -1,
+            "uri": "atlas_janus",
+            "isReadOnly": false,
+            "isCompactionEnabled": true,
+            "column_families": [
+                {
+                    "guid": "94e047cf-8af3-411a-be0a-1d27bfbe4083",
+                    "typeName": "hbase_column_family"
+                },
+                {
+                    "guid": "8d39303b-3a50-4389-97fd-aa431711fdca",
+                    "typeName": "hbase_column_family"
+                },
+                {
+                    "guid": "b8f7d7db-a4ae-406b-95fb-0f49ff561b7e",
+                    "typeName": "hbase_column_family"
+                },
+                {
+                    "guid": "a95ed9aa-6768-48fa-bb07-bf8ecf13518a",
+                    "typeName": "hbase_column_family"
+                },
+                {
+                    "guid": "1491be7c-f101-4428-ad36-0f3d3a487080",
+                    "typeName": "hbase_column_family"
+                },
+                {
+                    "guid": "7e959240-a2d9-45aa-a75c-0291bd973df7",
+                    "typeName": "hbase_column_family"
+                },
+                {
+                    "guid": "19ad909e-8ef1-41c9-8a78-39ba0e2fc8e1",
+                    "typeName": "hbase_column_family"
+                },
+                {
+                    "guid": "50138fe4-8d5a-463e-8f66-cf1e220d3ae3",
+                    "typeName": "hbase_column_family"
+                },
+                {
+                    "guid": "31d48ae7-8d4d-48c7-b68e-66c6510d1f64",
+                    "typeName": "hbase_column_family"
+                }
+            ],
+            "createTime": 1543517998193,
+            "replicasPerRegion": 1,
+            "name": "atlas_janus",
+            "namespace": {
+                "guid": "97a74eed-9cd5-4168-8974-1c256d149217",
+                "typeName": "hbase_namespace"
+            },
+            "parameters": null
+        },
+        "guid": "7dccdadb-41d4-4169-8061-a81388e68004",
+        "status": "ACTIVE",
+        "createdBy": "atlas",
+        "updatedBy": "atlas",
+        "createTime": 1543518099200,
+        "updateTime": 1543518118076,
+        "version": 0,
+        "relationshipAttributes": {
+            "schema": [],
+            "inputToProcesses": [],
+            "column_families": [
+                {
+                    "guid": "50138fe4-8d5a-463e-8f66-cf1e220d3ae3",
+                    "typeName": "hbase_column_family",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "s",
+                    "relationshipGuid": "c5b5321c-63d4-4e91-875d-227d7851019c",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                {
+                    "guid": "7e959240-a2d9-45aa-a75c-0291bd973df7",
+                    "typeName": "hbase_column_family",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "l",
+                    "relationshipGuid": "6d33a4ff-0a2c-4b12-ae48-17beb2e055e5",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                {
+                    "guid": "19ad909e-8ef1-41c9-8a78-39ba0e2fc8e1",
+                    "typeName": "hbase_column_family",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "m",
+                    "relationshipGuid": "201cd516-1106-48d2-9dc2-fd8173e4c157",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                {
+                    "guid": "31d48ae7-8d4d-48c7-b68e-66c6510d1f64",
+                    "typeName": "hbase_column_family",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "t",
+                    "relationshipGuid": "010127ad-6c72-454d-8c97-3fa15d20be54",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                {
+                    "guid": "94e047cf-8af3-411a-be0a-1d27bfbe4083",
+                    "typeName": "hbase_column_family",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "e",
+                    "relationshipGuid": "a3188a3a-5036-4190-b2e2-18c47c92dbd1",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                {
+                    "guid": "b8f7d7db-a4ae-406b-95fb-0f49ff561b7e",
+                    "typeName": "hbase_column_family",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "g",
+                    "relationshipGuid": "00b6b5c3-3040-4bca-8952-58c52d54e025",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                {
+                    "guid": "1491be7c-f101-4428-ad36-0f3d3a487080",
+                    "typeName": "hbase_column_family",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "i",
+                    "relationshipGuid": "9bb33d9a-4080-46e5-873f-34782d7c7b1d",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                {
+                    "guid": "8d39303b-3a50-4389-97fd-aa431711fdca",
+                    "typeName": "hbase_column_family",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "f",
+                    "relationshipGuid": "a9ff2f6d-aeea-41d4-bc67-5ba74ed8b52c",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                },
+                {
+                    "guid": "a95ed9aa-6768-48fa-bb07-bf8ecf13518a",
+                    "typeName": "hbase_column_family",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "h",
+                    "relationshipGuid": "3d63743f-c5d9-467b-b1cb-b1afd80083a7",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hbase_table_column_families"
+                    }
+                }
+            ],
+            "namespace": {
+                "guid": "97a74eed-9cd5-4168-8974-1c256d149217",
+                "typeName": "hbase_namespace",
+                "entityStatus": "ACTIVE",
+                "displayText": "default",
+                "relationshipGuid": "f69d49b2-f647-445d-8431-b8276ad53864",
+                "relationshipStatus": "ACTIVE",
+                "relationshipAttributes": {
+                    "typeName": "hbase_table_namespace"
+                }
+            },
+            "meanings": [],
+            "outputFromProcesses": []
+        }
+    }
+}

@@ -1,0 +1,88 @@
+(venv) C:\Users\Rim\Desktop\pfa_2a\atlasTest>py test4.py
+{
+  "mutatedEntities": {
+    "CREATE": [
+      {
+        "typeName": "hive_table",
+        "attributes": {
+          "qualifiedName": "db_student.sales_data@Sandbox_storage"
+        },
+        "guid": "d0ca5677-ec54-43cb-9cc4-db2824d32e57",
+        "status": "ACTIVE"
+      }
+    ],
+    "UPDATE": [
+      {
+        "typeName": "hive_db",
+        "attributes": {
+          "qualifiedName": "db_student@Sandbox"
+        },
+        "guid": "0fdce6cb-3aaf-4123-a00b-1b1789432b6e",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  "guidAssignments": {
+    "-1": "d0ca5677-ec54-43cb-9cc4-db2824d32e57"
+  }
+}
+
+(venv) C:\Users\Rim\Desktop\pfa_2a\atlasTest>py test5.py
+Traceback (most recent call last):
+  File "C:\Users\Rim\Desktop\pfa_2a\atlasTest\test5.py", line 25, in <module>
+    db_atlas = AtlasEntity().from_json(db)
+               ^^^^^^^^^^^^^
+TypeError: AtlasEntity.__init__() missing 3 required positional arguments: 'name', 'typeName', and 'qualified_name'
+
+(venv) C:\Users\Rim\Desktop\pfa_2a\atlasTest>py test5.py
+{
+  "mutatedEntities": {
+    "CREATE": [
+      {
+        "typeName": "hive_column",
+        "attributes": {
+          "qualifiedName": "db_student.sales_data.product_id@Sandbox_storage"
+        },
+        "guid": "847bbe9d-c5d9-4124-a5fe-d49454bf1df9",
+        "status": "ACTIVE"
+      },
+      {
+        "typeName": "hive_column",
+        "attributes": {
+          "qualifiedName": "db_student.sales_data.product_name@Sandbox_storage"
+        },
+        "guid": "1993a4e3-cb05-4ef0-a85e-6d4c6e5fedbd",
+        "status": "ACTIVE"
+      },
+      {
+        "typeName": "hive_column",
+        "attributes": {
+          "qualifiedName": "db_student.sales_data.sale_amount@Sandbox_storage"
+        },
+        "guid": "a58acfc1-25ea-47d2-a5b7-90cf74019463",
+        "status": "ACTIVE"
+      }
+    ],
+    "UPDATE": [
+      {
+        "typeName": "hive_table",
+        "attributes": {
+          "qualifiedName": "db_student.sales_data@Sandbox_storage"
+        },
+        "guid": "d0ca5677-ec54-43cb-9cc4-db2824d32e57",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  "guidAssignments": {
+    "-1": "d0ca5677-ec54-43cb-9cc4-db2824d32e57",
+    "-2": "847bbe9d-c5d9-4124-a5fe-d49454bf1df9",
+    "-3": "1993a4e3-cb05-4ef0-a85e-6d4c6e5fedbd",
+    "-4": "a58acfc1-25ea-47d2-a5b7-90cf74019463"
+  }
+}
+
+(venv) C:\Users\Rim\Desktop\pfa_2a\atlasTest>py test6.py
+{'typeName': 'hive_db', 'guid': '0fdce6cb-3aaf-4123-a00b-1b1789432b6e', 'qualifiedName': 'db_student@Sandbox'}
+
+(venv) C:\Users\Rim\Desktop\pfa_2a\atlasTest>

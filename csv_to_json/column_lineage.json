@@ -1,0 +1,59 @@
+{
+    "queryType": "DSL",
+    "queryText": "from hive_column_lineage",
+    "entities": [
+        {
+            "typeName": "hive_column_lineage",
+            "attributes": {
+                "qualifiedName": "datagov.branch_intersect@Sandbox:1740585113000:full_name",
+                "name": "create table branch_intersect as select b1.full_name,b1.ssn,b1.location from brancha b1 inner join branchb\nb2 on b1.ssn = b2.ssn:full_name"
+            },
+            "guid": "e14e0dbb-2810-4975-abe8-241232ced0e8",
+            "status": "ACTIVE",
+            "displayText": "create table branch_intersect as select b1.full_name,b1.ssn,b1.location from brancha b1 inner join branchb\nb2 on b1.ssn = b2.ssn:full_name",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "hive_column_lineage",
+            "attributes": {
+                "qualifiedName": "datagov.branch_intersect@Sandbox:1740585113000:ssn",
+                "name": "create table branch_intersect as select b1.full_name,b1.ssn,b1.location from brancha b1 inner join branchb\nb2 on b1.ssn = b2.ssn:ssn"
+            },
+            "guid": "3a860aed-6b0d-4944-8daa-0e2c1dc761c3",
+            "status": "ACTIVE",
+            "displayText": "create table branch_intersect as select b1.full_name,b1.ssn,b1.location from brancha b1 inner join branchb\nb2 on b1.ssn = b2.ssn:ssn",
+            "classificationNames": [
+                "PII"
+            ],
+            "classifications": [
+                {
+                    "typeName": "PII",
+                    "entityGuid": "ba2d4aa8-abaa-4705-8fae-f073836647b3",
+                    "entityStatus": "ACTIVE",
+                    "propagate": true,
+                    "validityPeriods": [],
+                    "removePropagationsOnEntityDelete": false
+                }
+            ],
+            "meaningNames": [],
+            "meanings": []
+        },
+        {
+            "typeName": "hive_column_lineage",
+            "attributes": {
+                "qualifiedName": "datagov.branch_intersect@Sandbox:1740585113000:location",
+                "name": "create table branch_intersect as select b1.full_name,b1.ssn,b1.location from brancha b1 inner join branchb\nb2 on b1.ssn = b2.ssn:location"
+            },
+            "guid": "459e16bb-a99b-4605-9376-eb24d8a6b71c",
+            "status": "ACTIVE",
+            "displayText": "create table branch_intersect as select b1.full_name,b1.ssn,b1.location from brancha b1 inner join branchb\nb2 on b1.ssn = b2.ssn:location",
+            "classificationNames": [],
+            "classifications": [],
+            "meaningNames": [],
+            "meanings": []
+        }
+    ]
+}

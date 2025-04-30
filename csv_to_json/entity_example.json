@@ -1,0 +1,578 @@
+{
+    "referredEntities": {
+        "0f35f7d2-b203-4e23-8570-ac9eb49d1bd5": {
+            "typeName": "hive_column",
+            "attributes": {
+                "owner": "hive",
+                "qualifiedName": "db_student.customer.partner@Sandbox",
+                "name": "partner",
+                "description": null,
+                "comment": null,
+                "position": 3,
+                "type": "string",
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table"
+                }
+            },
+            "guid": "0f35f7d2-b203-4e23-8570-ac9eb49d1bd5",
+            "status": "ACTIVE",
+            "createdBy": "hive",
+            "updatedBy": "hive",
+            "createTime": 1740584244162,
+            "updateTime": 1740584244162,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "meanings": [],
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "customer",
+                    "relationshipGuid": "4318d221-6dea-4d53-b2e9-dab74607117a",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "b40b0b49-3fb7-4a32-9f52-64bbdffdd978": {
+            "typeName": "hive_column",
+            "attributes": {
+                "owner": "hive",
+                "qualifiedName": "db_student.customer.gender@Sandbox",
+                "name": "gender",
+                "description": null,
+                "comment": null,
+                "position": 1,
+                "type": "string",
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table"
+                }
+            },
+            "guid": "b40b0b49-3fb7-4a32-9f52-64bbdffdd978",
+            "status": "ACTIVE",
+            "createdBy": "hive",
+            "updatedBy": "hive",
+            "createTime": 1740584244162,
+            "updateTime": 1740584244162,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "meanings": [],
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "customer",
+                    "relationshipGuid": "2c3f0e0d-3d4f-4072-bc80-820a2edc0116",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "2bdf61b3-d7e1-4a47-95a8-f355a6c3cb0a": {
+            "typeName": "hive_column",
+            "attributes": {
+                "owner": "hive",
+                "qualifiedName": "db_student.customer.seniorcitizen@Sandbox",
+                "name": "seniorcitizen",
+                "description": null,
+                "comment": null,
+                "position": 2,
+                "type": "int",
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table"
+                }
+            },
+            "guid": "2bdf61b3-d7e1-4a47-95a8-f355a6c3cb0a",
+            "status": "ACTIVE",
+            "createdBy": "hive",
+            "updatedBy": "hive",
+            "createTime": 1740584244162,
+            "updateTime": 1740584244162,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "meanings": [],
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "customer",
+                    "relationshipGuid": "91bf7759-7a05-4b79-b906-d84656372721",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "ebca4e71-3855-4ee4-8874-85f4763acc31": {
+            "typeName": "hive_column",
+            "attributes": {
+                "owner": "hive",
+                "qualifiedName": "db_student.customer.dependents@Sandbox",
+                "name": "dependents",
+                "description": null,
+                "comment": null,
+                "position": 4,
+                "type": "string",
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table"
+                }
+            },
+            "guid": "ebca4e71-3855-4ee4-8874-85f4763acc31",
+            "status": "ACTIVE",
+            "createdBy": "hive",
+            "updatedBy": "hive",
+            "createTime": 1740584244162,
+            "updateTime": 1740584244162,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "meanings": [],
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "customer",
+                    "relationshipGuid": "51370b01-1e3d-4d1c-9f8d-1512e36d024a",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "7bdf436d-87ab-4451-8bc8-100ea1275042": {
+            "typeName": "hive_column",
+            "attributes": {
+                "owner": "hive",
+                "qualifiedName": "db_student.customer.tenure@Sandbox",
+                "name": "tenure",
+                "description": null,
+                "comment": null,
+                "position": 5,
+                "type": "int",
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table"
+                }
+            },
+            "guid": "7bdf436d-87ab-4451-8bc8-100ea1275042",
+            "status": "ACTIVE",
+            "createdBy": "hive",
+            "updatedBy": "hive",
+            "createTime": 1740584244162,
+            "updateTime": 1740584244162,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "meanings": [],
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "customer",
+                    "relationshipGuid": "3aa9d68d-46fa-47a3-ae07-5e8627c99e34",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "50db5f6f-b836-4cb8-8ee6-0ee5c6dd21af": {
+            "typeName": "hive_storagedesc",
+            "attributes": {
+                "bucketCols": null,
+                "qualifiedName": "db_student.customer@Sandbox_storage",
+                "sortCols": null,
+                "storedAsSubDirectories": false,
+                "location": "hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/db_student.db/customer",
+                "compressed": false,
+                "inputFormat": "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
+                "outputFormat": "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
+                "parameters": null,
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table"
+                },
+                "serdeInfo": {
+                    "typeName": "hive_serde",
+                    "attributes": {
+                        "serializationLib": "org.apache.hadoop.hive.ql.io.orc.OrcSerde",
+                        "name": null,
+                        "parameters": {
+                            "serialization.format": "1"
+                        }
+                    }
+                },
+                "numBuckets": -1
+            },
+            "guid": "50db5f6f-b836-4cb8-8ee6-0ee5c6dd21af",
+            "status": "ACTIVE",
+            "createdBy": "hive",
+            "updatedBy": "hive",
+            "createTime": 1740584244162,
+            "updateTime": 1740584244162,
+            "version": 0,
+            "relationshipAttributes": {
+                "meanings": [],
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "customer",
+                    "relationshipGuid": "21092332-a2bd-4f81-942d-9f6c3f7f1d85",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_storagedesc"
+                    }
+                }
+            }
+        },
+        "82de4b45-7f78-4cb6-84e0-37d0a2521d13": {
+            "typeName": "hive_column",
+            "attributes": {
+                "owner": "hive",
+                "qualifiedName": "db_student.customer.customerid@Sandbox",
+                "name": "customerid",
+                "description": null,
+                "comment": null,
+                "position": 0,
+                "type": "string",
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table"
+                }
+            },
+            "guid": "82de4b45-7f78-4cb6-84e0-37d0a2521d13",
+            "status": "ACTIVE",
+            "createdBy": "hive",
+            "updatedBy": "hive",
+            "createTime": 1740584244162,
+            "updateTime": 1740584244162,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "meanings": [],
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "customer",
+                    "relationshipGuid": "949dacb1-7236-4247-a307-f40ecf5b96ad",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        },
+        "ea887962-a0e9-43c5-a062-1c0159f5d778": {
+            "typeName": "hive_column",
+            "attributes": {
+                "owner": "hive",
+                "qualifiedName": "db_student.customer.phoneservice@Sandbox",
+                "name": "phoneservice",
+                "description": null,
+                "comment": null,
+                "position": 6,
+                "type": "string",
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table"
+                }
+            },
+            "guid": "ea887962-a0e9-43c5-a062-1c0159f5d778",
+            "status": "ACTIVE",
+            "createdBy": "hive",
+            "updatedBy": "hive",
+            "createTime": 1740584244162,
+            "updateTime": 1740584244162,
+            "version": 0,
+            "relationshipAttributes": {
+                "schema": [],
+                "inputToProcesses": [],
+                "meanings": [],
+                "table": {
+                    "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+                    "typeName": "hive_table",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "customer",
+                    "relationshipGuid": "224d68dd-36f5-4002-bc0b-d4bcd84ffa54",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                "outputFromProcesses": []
+            }
+        }
+    },
+    "entity": {
+        "typeName": "hive_table",
+        "attributes": {
+            "owner": "hive",
+            "temporary": false,
+            "lastAccessTime": 1740584243000,
+            "aliases": null,
+            "qualifiedName": "db_student.customer@Sandbox",
+            "columns": [
+                {
+                    "guid": "82de4b45-7f78-4cb6-84e0-37d0a2521d13",
+                    "typeName": "hive_column"
+                },
+                {
+                    "guid": "b40b0b49-3fb7-4a32-9f52-64bbdffdd978",
+                    "typeName": "hive_column"
+                },
+                {
+                    "guid": "2bdf61b3-d7e1-4a47-95a8-f355a6c3cb0a",
+                    "typeName": "hive_column"
+                },
+                {
+                    "guid": "0f35f7d2-b203-4e23-8570-ac9eb49d1bd5",
+                    "typeName": "hive_column"
+                },
+                {
+                    "guid": "ebca4e71-3855-4ee4-8874-85f4763acc31",
+                    "typeName": "hive_column"
+                },
+                {
+                    "guid": "7bdf436d-87ab-4451-8bc8-100ea1275042",
+                    "typeName": "hive_column"
+                },
+                {
+                    "guid": "ea887962-a0e9-43c5-a062-1c0159f5d778",
+                    "typeName": "hive_column"
+                }
+            ],
+            "description": null,
+            "viewExpandedText": null,
+            "sd": {
+                "guid": "50db5f6f-b836-4cb8-8ee6-0ee5c6dd21af",
+                "typeName": "hive_storagedesc"
+            },
+            "tableType": "MANAGED_TABLE",
+            "createTime": 1740584243000,
+            "name": "customer",
+            "comment": null,
+            "partitionKeys": null,
+            "parameters": {
+                "totalSize": "0",
+                "numRows": "0",
+                "rawDataSize": "0",
+                "transactional_properties": "default",
+                "COLUMN_STATS_ACCURATE": "{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"customerid\":\"true\",\"dependents\":\"true\",\"gender\":\"true\",\"partner\":\"true\",\"phoneservice\":\"true\",\"seniorcitizen\":\"true\",\"tenure\":\"true\"}}",
+                "numFiles": "0",
+                "transient_lastDdlTime": "1740584243",
+                "bucketing_version": "2",
+                "transactional": "true"
+            },
+            "db": {
+                "guid": "0fdce6cb-3aaf-4123-a00b-1b1789432b6e",
+                "typeName": "hive_db"
+            },
+            "retention": 0,
+            "viewOriginalText": null
+        },
+        "guid": "6cbdfab6-44ac-4197-b045-f35c0d8670a0",
+        "status": "ACTIVE",
+        "createdBy": "hive",
+        "updatedBy": "hive",
+        "createTime": 1740584244162,
+        "updateTime": 1740584244162,
+        "version": 0,
+        "relationshipAttributes": {
+            "schema": [],
+            "inputToProcesses": [],
+            "sd": {
+                "guid": "50db5f6f-b836-4cb8-8ee6-0ee5c6dd21af",
+                "typeName": "hive_storagedesc",
+                "entityStatus": "ACTIVE",
+                "displayText": "db_student.customer@Sandbox_storage",
+                "relationshipGuid": "3bd8d78b-5192-4464-b65f-8323d82aded6",
+                "relationshipStatus": "ACTIVE",
+                "relationshipAttributes": {
+                    "typeName": "hive_table_storagedesc"
+                }
+            },
+            "columns": [
+                {
+                    "guid": "0f35f7d2-b203-4e23-8570-ac9eb49d1bd5",
+                    "typeName": "hive_column",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "partner",
+                    "relationshipGuid": "7b0031ce-9898-477a-a757-e5c43adb13f6",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                {
+                    "guid": "82de4b45-7f78-4cb6-84e0-37d0a2521d13",
+                    "typeName": "hive_column",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "customerid",
+                    "relationshipGuid": "f8df8b90-5d9a-403c-bb0f-5123d6759e50",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                {
+                    "guid": "ebca4e71-3855-4ee4-8874-85f4763acc31",
+                    "typeName": "hive_column",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "dependents",
+                    "relationshipGuid": "ba5b0b80-3159-48a1-a724-5b947ca50f62",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                {
+                    "guid": "2bdf61b3-d7e1-4a47-95a8-f355a6c3cb0a",
+                    "typeName": "hive_column",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "seniorcitizen",
+                    "relationshipGuid": "c51d42bc-dc31-49ae-b919-90b7badef2f7",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                {
+                    "guid": "b40b0b49-3fb7-4a32-9f52-64bbdffdd978",
+                    "typeName": "hive_column",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "gender",
+                    "relationshipGuid": "3ad29ea9-606a-4a3c-954c-e477def32902",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                {
+                    "guid": "7bdf436d-87ab-4451-8bc8-100ea1275042",
+                    "typeName": "hive_column",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "tenure",
+                    "relationshipGuid": "a70d8d97-d946-4554-895e-3763e80d013e",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                },
+                {
+                    "guid": "ea887962-a0e9-43c5-a062-1c0159f5d778",
+                    "typeName": "hive_column",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "phoneservice",
+                    "relationshipGuid": "e0ccd220-22c2-4673-a0b9-17df168ce7b5",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "hive_table_columns"
+                    }
+                }
+            ],
+            "partitionKeys": [],
+            "meanings": [
+                {
+                    "guid": "b49a0a57-7544-4c18-8efe-4c6496ee85ab",
+                    "typeName": "AtlasGlossaryTerm",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "LANDLINE",
+                    "relationshipGuid": "da59911b-c6ae-49f8-87fb-afa73a04180c",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "AtlasGlossarySemanticAssignment",
+                        "attributes": {
+                            "expression": null,
+                            "createdBy": null,
+                            "steward": null,
+                            "confidence": null,
+                            "description": null,
+                            "source": null,
+                            "status": null
+                        }
+                    }
+                },
+                {
+                    "guid": "7c68c3dc-34ab-4352-807d-9bd46f062752",
+                    "typeName": "AtlasGlossaryTerm",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "CELLULAR TECHNOLOGY",
+                    "relationshipGuid": "4df8f53f-455f-42a6-89b3-93d132470a0e",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "AtlasGlossarySemanticAssignment",
+                        "attributes": {
+                            "expression": null,
+                            "createdBy": null,
+                            "steward": null,
+                            "confidence": null,
+                            "description": null,
+                            "source": null,
+                            "status": null
+                        }
+                    }
+                },
+                {
+                    "guid": "cc250ab4-fc92-440c-8b49-0c280d7bb908",
+                    "typeName": "AtlasGlossaryTerm",
+                    "entityStatus": "ACTIVE",
+                    "displayText": "INTERACTIVE VIDEO DATA SERVICE (IVDS)",
+                    "relationshipGuid": "61b82701-1c11-4a24-8d08-36ac26fac5cd",
+                    "relationshipStatus": "ACTIVE",
+                    "relationshipAttributes": {
+                        "typeName": "AtlasGlossarySemanticAssignment",
+                        "attributes": {
+                            "expression": null,
+                            "createdBy": null,
+                            "steward": null,
+                            "confidence": null,
+                            "description": null,
+                            "source": null,
+                            "status": null
+                        }
+                    }
+                }
+            ],
+            "db": {
+                "guid": "0fdce6cb-3aaf-4123-a00b-1b1789432b6e",
+                "typeName": "hive_db",
+                "entityStatus": "ACTIVE",
+                "displayText": "db_student",
+                "relationshipGuid": "d42c3f80-c393-4c5f-b419-7f2b53269c0d",
+                "relationshipStatus": "ACTIVE",
+                "relationshipAttributes": {
+                    "typeName": "hive_table_db"
+                }
+            },
+            "outputFromProcesses": []
+        }
+    }
+}

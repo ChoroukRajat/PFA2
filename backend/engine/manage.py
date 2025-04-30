@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
+import dotenv
 import os
 import sys
+
+dotenv.load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 
 def main():
