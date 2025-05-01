@@ -204,3 +204,35 @@ class BulkCreateUsersView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+        
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import User, Team
+
+class TeamUsersView(APIView):
+    def get(self, request, team_id):
+        try:
+            # Verify team exists
+            team = Team.objects.get(id=team_id)
+            
+            # Get all users for this team
+            users = User.objects.filter(team=team).order_by('email')
+            
+            # Prepare response data
+            data = [{
+                'id': user.id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role,
+                'team_id': team_id,
+                'team_name': team.name
+            } for user in users]
+            
+            return Response({'users': data}, status=status.HTTP_200_OK)
+            
+        except Team.DoesNotExist:
+            return Response({'error': 'Team not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

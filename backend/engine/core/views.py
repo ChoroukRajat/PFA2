@@ -30,6 +30,9 @@ from .models import File, FileAction
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
 
+from datetime import datetime, timedelta
+from django.db.models import Count, Q
+
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
@@ -787,3 +790,119 @@ class DownloadNormalizedFile(APIView):
                 return response
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
+
+class TeamFileActionsView(APIView):
+    def get(self, request, team_id):
+        try:
+            # Get filter parameters
+            action_type = request.query_params.get('action_type', '')
+            time_range = request.query_params.get('time_range', 'month')
+            user_id = request.query_params.get('user_id', '')
+
+            # Base query - ensure we're only getting actions for users in the specified team
+            actions = FileAction.objects.filter(
+                user__team_id=team_id
+            ).select_related(
+                'user', 'source_file', 'new_file'
+            ).order_by('-date')
+
+            # Apply filters
+            if action_type:
+                actions = actions.filter(description__icontains=action_type)
+            
+            if user_id:
+                actions = actions.filter(user_id=user_id)
+
+            # Time range filter
+            now = datetime.now()
+            if time_range == 'week':
+                actions = actions.filter(date__gte=now - timedelta(days=7))
+            elif time_range == 'month':
+                actions = actions.filter(date__gte=now - timedelta(days=30))
+            elif time_range == 'year':
+                actions = actions.filter(date__gte=now - timedelta(days=365))
+
+            # Prepare response data
+            data = [{
+                'id': action.id,
+                'user': {
+                    'id': action.user.id,
+                    'email': action.user.email,
+                    'name': f"{action.user.first_name} {action.user.last_name}"
+                },
+                'source_file': action.source_file.file_name,
+                'new_file': action.new_file.file_name,
+                'date': action.date.strftime("%Y-%m-%d %H:%M:%S"),
+                'description': action.description,
+                'action_type': self.extract_action_type(action.description)
+            } for action in actions]
+
+            return Response({'actions': data}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def extract_action_type(self, description):
+        """Helper to extract action type from description"""
+        description = description.lower()
+        if 'upload' in description:
+            return 'upload'
+        elif 'normalize' in description:
+            return 'normalization'
+        elif 'duplicate' in description:
+            return 'duplicates_removed'
+        elif 'missing' in description:
+            return 'missing_values_removed'
+        return 'other'
+
+class TeamActivityStatsView(APIView):
+    def get(self, request, team_id):
+        try:
+            # Get time range parameter
+            time_range = request.query_params.get('time_range', 'month')
+
+            # Calculate date threshold
+            now = datetime.now()
+            if time_range == 'week':
+                threshold = now - timedelta(days=7)
+            elif time_range == 'month':
+                threshold = now - timedelta(days=30)
+            elif time_range == 'year':
+                threshold = now - timedelta(days=365)
+            else:  # all
+                threshold = None
+
+            # Base queryset - ensure we're only getting actions for users in the specified team
+            actions = FileAction.objects.filter(user__team_id=team_id)
+            if threshold:
+                actions = actions.filter(date__gte=threshold)
+
+            # User activity stats
+            user_stats = actions.values(
+                'user__id', 
+                'user__email',
+                'user__first_name',
+                'user__last_name'
+            ).annotate(
+                total_actions=Count('id'),
+                uploads=Count('id', filter=Q(description__icontains='upload')),
+                normalizations=Count('id', filter=Q(description__icontains='normalize')),
+                duplicates_removed=Count('id', filter=Q(description__icontains='duplicate')),
+                missing_values_removed=Count('id', filter=Q(description__icontains='missing'))
+            ).order_by('-total_actions')
+
+            # Action type distribution
+            action_types = actions.values(
+                'description'
+            ).annotate(
+                count=Count('id')
+            ).order_by('-count')[:10]
+
+            return Response({
+                'user_stats': list(user_stats),
+                'action_types': list(action_types)
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

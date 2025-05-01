@@ -15,6 +15,14 @@ urlpatterns = [
     path('analyze/<str:filename>', AnalyzeFileView.as_view(), name='analyze-file'),
     path('normalize/<str:column_name>', NormalizeColumnView.as_view(), name='normalize-column'),
     path('download/normalized', DownloadNormalizedFile.as_view(), name='download-normalized'),
+    path(
+        'teamfileactions/<int:team_id>/',
+        TeamFileActionsView.as_view()
+    ),
+    path(
+        'teamactivitystats/<int:team_id>/',
+        TeamActivityStatsView.as_view()
+    ),
 
 
 ]
