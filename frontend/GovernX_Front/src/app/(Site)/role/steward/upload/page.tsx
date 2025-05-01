@@ -2,7 +2,7 @@
 
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import StewardLayout from "@/components/Layouts/StewardLayout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Loader from "@/components/common/Loader";
 import {
   Chart as ChartJS,
@@ -34,17 +34,75 @@ const CSVAnalysis = () => {
   const [showMissingModal, setShowMissingModal] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [normalizing, setNormalizing] = useState<Record<string, boolean>>({});
+  const [currentFileName, setCurrentFileName] = useState<string | null>(null);
+  const [processingStep, setProcessingStep] = useState<
+    "duplicates" | "missing" | "normalization" | null
+  >(null);
+
+  const [normalizedColumns, setNormalizedColumns] = useState<Set<string>>(
+    new Set(),
+  );
+
+  // Load filename from localStorage on component mount
+  useEffect(() => {
+    const savedFilename = localStorage.getItem("currentFilename");
+    if (savedFilename) {
+      setCurrentFileName(savedFilename);
+      analyzeFile(savedFilename);
+    }
+  }, []);
+
+  const analyzeFile = async (filename: string) => {
+    const token = localStorage.getItem("token");
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/analyze/${filename}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) throw new Error("Failed to analyze file");
+
+      const data = await response.json();
+      setMetadata(data);
+      localStorage.setItem("csvMetadata", JSON.stringify(data));
+
+      const normState: Record<string, boolean> = {};
+      if (data.metadata?.normalization_suggestions) {
+        Object.keys(data.metadata.normalization_suggestions).forEach((col) => {
+          normState[col] = false;
+        });
+      }
+      setNormalizing(normState);
+    } catch (error) {
+      console.error("Error analyzing file:", error);
+      alert("Error analyzing file");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFileUpload = async () => {
     if (!file) return;
 
+    const token = localStorage.getItem("token");
     setLoading(true);
+
     const formData = new FormData();
     formData.append("file", file);
 
     try {
       const response = await fetch("http://localhost:8000/api/csvmetadata", {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
 
@@ -52,12 +110,18 @@ const CSVAnalysis = () => {
 
       const data = await response.json();
       setMetadata(data);
-      // Initialize normalizing state
+      setCurrentFileName(data.file.file_name);
+      localStorage.setItem("csvMetadata", JSON.stringify(data));
+      localStorage.setItem("currentFilename", data.file.file_name);
+
       const normState: Record<string, boolean> = {};
-      Object.keys(data.metadata.normalization_suggestions).forEach((col) => {
-        normState[col] = false;
-      });
+      if (data.metadata?.normalization_suggestions) {
+        Object.keys(data.metadata.normalization_suggestions).forEach((col) => {
+          normState[col] = false;
+        });
+      }
       setNormalizing(normState);
+      setProcessingStep(null);
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("Error analyzing CSV file");
@@ -67,18 +131,36 @@ const CSVAnalysis = () => {
   };
 
   const handleRemoveDuplicates = async () => {
+    if (!currentFileName) return;
+
     setProcessing(true);
+    setProcessingStep("duplicates");
     try {
-      const response = await fetch("http://localhost:8000/api/rd", {
-        method: "POST",
-      });
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        "http://localhost:8000/api/remove/duplicates",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            file_name: currentFileName,
+          }),
+        },
+      );
 
       if (!response.ok) throw new Error("Failed to remove duplicates");
 
       const data = await response.json();
-      setMetadata(data);
+      setCurrentFileName(data.cleaned_file);
+      localStorage.setItem("currentFilename", data.cleaned_file);
       setShowDuplicatesModal(false);
-      alert("Duplicates removed successfully");
+
+      // Re-analyze the cleaned file
+      await analyzeFile(data.cleaned_file);
     } catch (error) {
       console.error("Error removing duplicates:", error);
       alert("Error removing duplicates");
@@ -88,18 +170,36 @@ const CSVAnalysis = () => {
   };
 
   const handleRemoveMissing = async () => {
+    if (!currentFileName) return;
+
     setProcessing(true);
+    setProcessingStep("missing");
     try {
-      const response = await fetch("http://localhost:8000/api/rm", {
-        method: "POST",
-      });
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        "http://localhost:8000/api/remove/missingvalues",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            file_name: currentFileName,
+          }),
+        },
+      );
 
       if (!response.ok) throw new Error("Failed to remove missing values");
 
       const data = await response.json();
-      setMetadata(data);
+      setCurrentFileName(data.cleaned_file);
+      localStorage.setItem("currentFilename", data.cleaned_file);
       setShowMissingModal(false);
-      alert("Missing values removed successfully");
+
+      // Re-analyze the cleaned file
+      await analyzeFile(data.cleaned_file);
     } catch (error) {
       console.error("Error removing missing values:", error);
       alert("Error removing missing values");
@@ -108,20 +208,82 @@ const CSVAnalysis = () => {
     }
   };
 
-  const handleNormalizeColumn = async (columnName: string) => {
-    setNormalizing((prev) => ({ ...prev, [columnName]: true }));
+  const handleDownloadCurrentFile = async () => {
+    if (!currentFileName) return;
+
     try {
+      const token = localStorage.getItem("token");
+      let endpoint = "http://localhost:8000/api/download/original";
+
+      if (processingStep === "duplicates") {
+        endpoint = "http://localhost:8000/api/download/duplicates";
+      } else if (processingStep === "missing") {
+        endpoint = "http://localhost:8000/api/download/missingvalues";
+      } else if (processingStep === "normalization") {
+        endpoint = "http://localhost:8000/api/download/normalized";
+      }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          file_name: currentFileName,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to download file");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = currentFileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      alert("Error downloading file");
+    }
+  };
+
+  const handleNormalizeColumn = async (columnName: string) => {
+    if (normalizedColumns.has(columnName)) return;
+    if (!currentFileName) return;
+
+    setNormalizing((prev) => ({ ...prev, [columnName]: true }));
+    setProcessingStep("normalization");
+
+    try {
+      const token = localStorage.getItem("token");
+
       const response = await fetch(
         `http://localhost:8000/api/normalize/${columnName}`,
         {
           method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            file_name: currentFileName,
+          }),
         },
       );
 
       if (!response.ok) throw new Error(`Failed to normalize ${columnName}`);
+      setNormalizedColumns((prev) => new Set(prev).add(columnName));
 
       const data = await response.json();
-      setMetadata(data);
+      setCurrentFileName(data.cleaned_file);
+      localStorage.setItem("currentFilename", data.cleaned_file);
+
+      // Re-analyze the normalized file
+      await analyzeFile(data.cleaned_file);
       alert(`${columnName} normalized successfully`);
     } catch (error) {
       console.error(`Error normalizing ${columnName}:`, error);
@@ -133,8 +295,8 @@ const CSVAnalysis = () => {
 
   const renderDataTypesComparison = () => {
     if (
-      !metadata?.metadata.data_types ||
-      !metadata?.metadata.suggested_data_types
+      !metadata?.metadata?.data_types ||
+      !metadata?.metadata?.suggested_data_types
     )
       return null;
 
@@ -180,7 +342,7 @@ const CSVAnalysis = () => {
   };
 
   const renderNormalizationSuggestions = () => {
-    if (!metadata?.metadata.normalization_suggestions) return null;
+    if (!metadata?.metadata?.normalization_suggestions) return null;
 
     const columns = Object.keys(metadata.metadata.normalization_suggestions);
 
@@ -214,15 +376,25 @@ const CSVAnalysis = () => {
                     {metadata.metadata.normalization_suggestions[col]}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {metadata.metadata.normalization_suggestions[col].includes(
+                    {metadata.metadata.normalization_suggestions[col]?.includes(
                       "suggested",
                     ) && (
                       <button
                         onClick={() => handleNormalizeColumn(col)}
-                        disabled={normalizing[col]}
-                        className="rounded bg-blue-500 px-3 py-1 text-xs font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+                        disabled={
+                          normalizedColumns.has(col) || normalizing[col]
+                        }
+                        className={`rounded px-3 py-1 text-xs font-medium text-white ${
+                          normalizedColumns.has(col)
+                            ? "cursor-not-allowed bg-gray-400"
+                            : "bg-blue-500 hover:bg-blue-600"
+                        }`}
                       >
-                        {normalizing[col] ? "Normalizing..." : "Normalize"}
+                        {normalizedColumns.has(col)
+                          ? "Normalized"
+                          : normalizing[col]
+                            ? "Normalizing..."
+                            : "Normalize"}
                       </button>
                     )}
                   </td>
@@ -236,7 +408,7 @@ const CSVAnalysis = () => {
   };
 
   const renderPatternDetection = () => {
-    if (!metadata?.metadata.pattern_detection) return null;
+    if (!metadata?.metadata?.pattern_detection) return null;
 
     const columns = Object.keys(metadata.metadata.pattern_detection);
 
@@ -262,7 +434,7 @@ const CSVAnalysis = () => {
                     {col}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {metadata.metadata.pattern_detection[col].join(", ") ||
+                    {metadata.metadata.pattern_detection[col]?.join(", ") ||
                       "None"}
                   </td>
                 </tr>
@@ -275,11 +447,10 @@ const CSVAnalysis = () => {
   };
 
   const renderSemanticClusters = () => {
-    if (!metadata?.metadata.semantic_column_clusters) return null;
+    if (!metadata?.metadata?.semantic_column_clusters) return null;
 
     const clusters: Record<string, string[]> = {};
 
-    // Group columns by their cluster
     Object.entries(metadata.metadata.semantic_column_clusters).forEach(
       ([col, cluster]) => {
         if (!clusters[cluster as string]) {
@@ -319,7 +490,7 @@ const CSVAnalysis = () => {
   };
 
   const renderOutliersChart = () => {
-    if (!metadata?.metadata.outliers) return null;
+    if (!metadata?.metadata?.outliers) return null;
 
     const outliers = metadata.metadata.outliers;
     const filteredData = Object.entries(outliers)
@@ -363,9 +534,10 @@ const CSVAnalysis = () => {
     );
   };
 
-  const json = JSON.stringify(metadata, null, 2);
-  const lines = json.split("\n");
+  const json = metadata ? JSON.stringify(metadata, null, 2) : "";
+  const lines = json ? json.split("\n") : [];
   const display = showMore ? lines : lines.slice(0, 6);
+
   return (
     <StewardLayout>
       <div className="mx-auto w-full max-w-[970px]">
@@ -399,7 +571,7 @@ const CSVAnalysis = () => {
 
         {loading && <Loader />}
 
-        {metadata && (
+        {metadata && metadata.metadata && (
           <div className="space-y-6">
             <div className="rounded-lg bg-white p-6 shadow">
               <h2 className="mb-4 text-xl font-semibold">Metadata Summary</h2>
@@ -408,7 +580,7 @@ const CSVAnalysis = () => {
                 <div className="rounded bg-gray-50 p-4">
                   <h3 className="mb-2 font-medium">Columns</h3>
                   <ul className="list-disc pl-5">
-                    {metadata.metadata.columns.map((col: string) => (
+                    {metadata.metadata.columns?.map((col: string) => (
                       <li key={col}>{col}</li>
                     ))}
                   </ul>
@@ -416,44 +588,47 @@ const CSVAnalysis = () => {
 
                 <div className="rounded bg-gray-50 p-4">
                   <h3 className="mb-2 font-medium">Issues</h3>
-                  <p>Duplicates: {metadata.metadata.duplicates}</p>
+                  <p>Duplicates: {metadata.metadata.duplicates || 0}</p>
                   <p>
                     Missing values:{" "}
                     {
-                      Object.values(metadata.metadata.missing_values).filter(
-                        (v) => (v as number) > 0,
-                      ).length
+                      Object.values(
+                        metadata.metadata.missing_values || {},
+                      ).filter((v) => (v as number) > 0).length
                     }{" "}
                     columns
                   </p>
                 </div>
               </div>
 
-              {(metadata.metadata.duplicates > 0 ||
-                Object.values(metadata.metadata.missing_values).some(
+              <div className="flex flex-wrap gap-4">
+                <button
+                  onClick={handleDownloadCurrentFile}
+                  className="rounded bg-blue-500 px-4 py-2 font-medium text-white hover:bg-blue-600"
+                >
+                  Download {processingStep ? "Processed" : "Original"} File
+                </button>
+
+                {(metadata.metadata.duplicates || 0) > 0 && (
+                  <button
+                    onClick={() => setShowDuplicatesModal(true)}
+                    className="rounded bg-red-500 px-4 py-2 font-medium text-white hover:bg-red-600"
+                  >
+                    Remove Duplicates
+                  </button>
+                )}
+
+                {Object.values(metadata.metadata.missing_values || {}).some(
                   (v) => (v as number) > 0,
-                )) && (
-                <div className="flex space-x-4">
-                  {metadata.metadata.duplicates > 0 && (
-                    <button
-                      onClick={() => setShowDuplicatesModal(true)}
-                      className="rounded bg-red-500 px-4 py-2 font-medium text-white hover:bg-red-600"
-                    >
-                      Remove Duplicates
-                    </button>
-                  )}
-                  {Object.values(metadata.metadata.missing_values).some(
-                    (v) => (v as number) > 0,
-                  ) && (
-                    <button
-                      onClick={() => setShowMissingModal(true)}
-                      className="rounded bg-yellow-500 px-4 py-2 font-medium text-white hover:bg-yellow-600"
-                    >
-                      Remove Missing Values
-                    </button>
-                  )}
-                </div>
-              )}
+                ) && (
+                  <button
+                    onClick={() => setShowMissingModal(true)}
+                    className="rounded bg-yellow-500 px-4 py-2 font-medium text-white hover:bg-yellow-600"
+                  >
+                    Remove Missing Values
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-6">
@@ -486,14 +661,14 @@ const CSVAnalysis = () => {
 
         {/* Remove Duplicates Confirmation Modal */}
         {showDuplicatesModal && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
             <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
               <h3 className="mb-4 text-lg font-semibold">
                 Confirm Remove Duplicates
               </h3>
               <p className="mb-6">
-                Are you sure you want to remove {metadata.metadata.duplicates}{" "}
-                duplicate records?
+                Are you sure you want to remove{" "}
+                {metadata?.metadata?.duplicates || 0} duplicate records?
               </p>
               <div className="flex justify-end space-x-4">
                 <button
@@ -516,7 +691,7 @@ const CSVAnalysis = () => {
 
         {/* Remove Missing Values Confirmation Modal */}
         {showMissingModal && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
             <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
               <h3 className="mb-4 text-lg font-semibold">
                 Confirm Remove Missing Values
@@ -543,14 +718,7 @@ const CSVAnalysis = () => {
           </div>
         )}
       </div>
-      <br />
-      {metadata && (
-        <button className="hover:bg-primary-dark rounded bg-primary px-4 py-2 font-medium text-white disabled:opacity-50">
-          Upload csv to Hbase
-        </button>
-      )}
     </StewardLayout>
   );
 };
-
 export default CSVAnalysis;

@@ -27,6 +27,7 @@ class FileAction(models.Model):
     new_file = models.ForeignKey(File, related_name="new_file", on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
     description = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE,null=True)
 
     def __str__(self):
         return f"Action on {self.source_file.file_name} at {self.date}"

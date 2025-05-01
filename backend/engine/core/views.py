@@ -25,7 +25,11 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import PCA
-from .models import File
+from .models import File, FileAction
+
+from rest_framework.decorators import api_view
+from django.http import HttpResponse
+
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
@@ -145,6 +149,21 @@ class UploadCSVView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, format=None):
+
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+
         file_obj = request.FILES.get('file', None)
         if not file_obj:
             return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
@@ -170,6 +189,21 @@ class CSVMetadataView(APIView):
     parser_classes = [MultiPartParser]
 
     def post(self, request):
+
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+
         file_obj = request.FILES.get('file')
         if not file_obj:
             return Response({'error': 'No file provided'}, status=400)
@@ -187,11 +221,13 @@ class CSVMetadataView(APIView):
                 destination.write(chunk)
         
         # Store file info in the File table
-        #file_record = File.objects.create(
-            #file_name=original_file_name,  # original name from the user
-            #file_id=file_name,               # unique ID used for storing the file
-            #user=request.user,             # who uploaded the file
-            #date_uploaded=datetime.now(timezone.utc))
+        file_record = File.objects.create(
+            file_name=original_file_name,  
+            file_id=file_name,               
+            user=user,             
+            date_uploaded=datetime.now(timezone.utc))
+        
+    
 
         try:
             df = pd.read_csv(file_path)
@@ -300,3 +336,454 @@ class CSVMetadataView(APIView):
                 "semantic_column_clusters": semantic_clusters
             }
         })
+
+class RemoveMissingValues(APIView):
+    def post(self, request):
+
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+
+        file_name = request.data.get("file_name")
+        
+
+        if not file_name :
+            return Response({"error": "file_name is required"}, status=400)
+
+        search_dirs = ["media/csv_uploads", "media/duplicates", "media/missingvalue"]
+        file_path = next((os.path.join(d, file_name) for d in search_dirs if os.path.exists(os.path.join(d, file_name))), None)
+
+        if not file_path:
+            return Response({"error": "File not found"}, status=404)
+
+        try:
+            df = pd.read_csv(file_path)
+            df_cleaned = df.dropna()  
+
+            cleaned_file_name = "cleaned_missing_" + file_name
+            cleaned_file_path = os.path.join("media/missingvalue", cleaned_file_name)
+            df_cleaned.to_csv(cleaned_file_path, index=False)
+
+
+            source_file = File.objects.filter(file_name=file_name, user=user).first()
+            if not source_file:
+                source_file = File.objects.create(file_name=file_name, file_id=f"src_{file_name}", user=user)
+
+            new_file = File.objects.create(
+                file_name=cleaned_file_name,
+                file_id=f"missing_{file_name}",
+                user=user
+            )
+
+            FileAction.objects.create(
+                source_file=source_file,
+                new_file=new_file,
+                user=user,
+                description="Removed missing values"
+            )
+
+            return Response({
+                "message": "Missing values removed successfully",
+                "cleaned_file": cleaned_file_name
+            })
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class RemoveDuplicates(APIView):
+    def post(self, request):
+
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+
+        file_name = request.data.get("file_name")
+        
+
+        if not file_name :
+            return Response({"error": "file_name and user_id are required"}, status=400)
+
+        search_dirs = ["media/csv_uploads", "media/duplicates", "media/missingvalue"]
+        file_path = next((os.path.join(d, file_name) for d in search_dirs if os.path.exists(os.path.join(d, file_name))), None)
+
+        if not file_path:
+            return Response({"error": "File not found"}, status=404)
+
+        try:
+            df = pd.read_csv(file_path)
+            df_cleaned = df.drop_duplicates()  # remove duplicate rows
+
+            cleaned_file_name = "cleaned_duplicates_" + file_name
+            cleaned_file_path = os.path.join("media/duplicates", cleaned_file_name)
+            df_cleaned.to_csv(cleaned_file_path, index=False)
+
+
+            source_file = File.objects.filter(file_name=file_name, user=user).first()
+            if not source_file:
+                source_file = File.objects.create(file_name=file_name, file_id=f"src_{file_name}", user=user)
+
+            new_file = File.objects.create(
+                file_name=cleaned_file_name,
+                file_id=f"duplicates_{file_name}",
+                user=user
+            )
+
+            FileAction.objects.create(
+                source_file=source_file,
+                new_file=new_file,
+                user=user,
+                description="Removed duplicate rows"
+            )
+
+            return Response({
+                "message": "Duplicates removed successfully",
+                "cleaned_file": cleaned_file_name
+            })
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class DownloadOriginalFile(APIView):
+    def post(self, request):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+        file_name = request.data.get("file_name")
+        
+        if not file_name:
+            return Response({"error": "file_name is required"}, status=400)
+
+        search_dirs = ["media/csv_uploads", "media/duplicates", "media/missingvalue"]
+        file_path = next((os.path.join(d, file_name) for d in search_dirs if os.path.exists(os.path.join(d, file_name))), None)
+
+        if not file_path:
+            return Response({"error": "File not found"}, status=404)
+
+        try:
+            with open(file_path, 'rb') as fh:
+                response = HttpResponse(fh.read(), content_type="application/octet-stream")
+                response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path)
+                return response
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class DownloadDuplicatesFile(APIView):
+    def post(self, request):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+        file_name = request.data.get("file_name")
+        
+        if not file_name:
+            return Response({"error": "file_name is required"}, status=400)
+
+        file_path = os.path.join("media/duplicates", file_name)
+        if not os.path.exists(file_path):
+            return Response({"error": "File not found"}, status=404)
+
+        try:
+            with open(file_path, 'rb') as fh:
+                response = HttpResponse(fh.read(), content_type="application/octet-stream")
+                response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path)
+                return response
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class DownloadMissingValuesFile(APIView):
+    def post(self, request):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+        file_name = request.data.get("file_name")
+        
+        if not file_name:
+            return Response({"error": "file_name is required"}, status=400)
+
+        file_path = os.path.join("media/missingvalue", file_name)
+        if not os.path.exists(file_path):
+            return Response({"error": "File not found"}, status=404)
+
+        try:
+            with open(file_path, 'rb') as fh:
+                response = HttpResponse(fh.read(), content_type="application/octet-stream")
+                response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path)
+                return response
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+
+class AnalyzeFileView(APIView):
+    def get(self, request, filename):
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+
+        search_dirs = ["media/csv_uploads", "media/duplicates", "media/missingvalue", "media/normalized"]
+        file_path = next((os.path.join(d, filename) for d in search_dirs if os.path.exists(os.path.join(d, filename))), None)
+
+        if not file_path:
+            return Response({"error": "File not found"}, status=404)
+
+        try:
+            df = pd.read_csv(file_path)
+
+            columns = df.columns.tolist()
+            data_types = df.dtypes.apply(lambda x: x.name).to_dict()
+            missing_values = df.isnull().sum().to_dict()
+            duplicates = df.duplicated().sum()
+
+            suggested_types = {}
+            for col in df.columns:
+                if df[col].dtype == 'object':
+                    try:
+                        pd.to_datetime(df[col])
+                        suggested_types[col] = 'datetime'
+                    except:
+                        suggested_types[col] = 'string'
+                else:
+                    suggested_types[col] = df[col].dtype.name
+
+            outliers = {}
+            for col in df.select_dtypes(include=[np.number]):
+                q1 = df[col].quantile(0.25)
+                q3 = df[col].quantile(0.75)
+                iqr = q3 - q1
+                lower = q1 - 1.5 * iqr
+                upper = q3 + 1.5 * iqr
+                outliers[col] = int(((df[col] < lower) | (df[col] > upper)).sum())
+
+            normalization = {}
+            for col in df.select_dtypes(include=[np.number]):
+                if col.endswith("id"):
+                    normalization[col] = "no normalization needed"
+                else:
+                    col_data = df[col].dropna()
+                    if col_data.std() > 0:
+                        normalization[col] = "z-score normalization suggested"
+                    else:
+                        normalization[col] = "no normalization needed"
+
+            regex_patterns = {
+            "email": r"^[\w\.-]+@[\w\.-]+\.\w+$",
+            "date": r"^\d{4}-\d{2}-\d{2}$",
+            "phone": r"^\+?[0-9\-\(\) ]{7,}$",
+            "postal_code": r"^\d{5}(-\d{4})?$"
+        }
+
+            pattern_detection = {}
+            for col in df.columns:
+                sample_values = df[col].dropna().astype(str).head(20)
+                detected = []
+                for label, pattern in regex_patterns.items():
+                    if all(re.match(pattern, val) for val in sample_values):
+                        detected.append(label)
+                pattern_detection[col] = detected or ["none"]
+
+            semantic_clusters = {}
+            text_columns = df.select_dtypes(include=['object']).columns.tolist()
+            if len(text_columns) > 1:
+                corpus = [" ".join(df[col].dropna().astype(str)) for col in text_columns]
+                vectorizer = TfidfVectorizer(stop_words='english', max_features=1000)
+                tfidf_matrix = vectorizer.fit_transform(corpus)
+
+                if tfidf_matrix.shape[0] >= 2:
+                    reduced = PCA(n_components=2).fit_transform(tfidf_matrix.toarray())
+                    kmeans = KMeans(n_clusters=min(3, len(text_columns)), random_state=42).fit(reduced)
+                    labels = kmeans.labels_
+
+                    cluster_columns = defaultdict(list)
+                    for i, label in enumerate(labels):
+                        cluster_columns[label].append(text_columns[i])
+
+                    cluster_labels = {}
+                    terms = vectorizer.get_feature_names_out()
+                    for cluster_id, cols in cluster_columns.items():
+                        cluster_text = " ".join(" ".join(df[col].dropna().astype(str)) for col in cols)
+                        cluster_vec = vectorizer.transform([cluster_text])
+                        top_indices = heapq.nlargest(3, range(len(terms)), key=lambda i: cluster_vec[0, i])
+                        top_keywords = [terms[i] for i in top_indices]
+                        cluster_name = "_".join(top_keywords)
+                        cluster_labels[cluster_id] = cluster_name or f"group_{cluster_id}"
+
+                    for i, col in enumerate(text_columns):
+                        cluster_id = labels[i]
+                        semantic_clusters[col] = cluster_labels[cluster_id]
+                else:
+                    semantic_clusters = {col: "general_text" for col in text_columns}
+            else:
+                semantic_clusters = {col: "general_text" for col in text_columns}
+
+            return Response({
+                "file": {"file_name": filename},
+                "metadata": {
+                    "columns": columns,
+                    "data_types": data_types,
+                    "missing_values": missing_values,
+                    "duplicates": duplicates,
+                    "suggested_data_types": suggested_types,
+                    "outliers": outliers,
+                    "normalization_suggestions": normalization,
+                    "pattern_detection": pattern_detection,
+                    "semantic_column_clusters": semantic_clusters
+                }
+            })
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class NormalizeColumnView(APIView):
+    def post(self, request, column_name):
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+
+        file_name = request.data.get("file_name")
+        
+        if not file_name:
+            return Response({"error": "file_name is required"}, status=400)
+
+        search_dirs = ["media/csv_uploads", "media/duplicates", "media/missingvalue", "media/normalized"]
+        file_path = next((os.path.join(d, file_name) for d in search_dirs if os.path.exists(os.path.join(d, file_name))), None)
+
+        if not file_path:
+            return Response({"error": "File not found"}, status=404)
+
+        try:
+            df = pd.read_csv(file_path)
+            
+            if column_name not in df.columns:
+                return Response({"error": f"Column {column_name} not found in file"}, status=400)
+
+            if df[column_name].dtype in ['int64', 'float64']:
+                scaler = StandardScaler()
+                df[column_name] = scaler.fit_transform(df[[column_name]])
+            else:
+                return Response({"error": "Only numeric columns can be normalized"}, status=400)
+
+            cleaned_file_name = f"normalized_{column_name}_{file_name}"
+            cleaned_file_path = os.path.join("media/normalized", cleaned_file_name)
+            os.makedirs(os.path.dirname(cleaned_file_path), exist_ok=True)
+            df.to_csv(cleaned_file_path, index=False)
+
+            source_file = File.objects.filter(file_name=file_name, user=user).first()
+            if not source_file:
+                source_file = File.objects.create(file_name=file_name, file_id=f"src_{file_name}", user=user)
+
+            new_file = File.objects.create(
+                file_name=cleaned_file_name,
+                file_id=f"normalized_{file_name}",
+                user=user
+            )
+
+            FileAction.objects.create(
+                source_file=source_file,
+                new_file=new_file,
+                user=user,
+                description=f"Normalized column {column_name}"
+            )
+
+            return Response({
+                "message": f"Column {column_name} normalized successfully",
+                "cleaned_file": cleaned_file_name
+            })
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class DownloadNormalizedFile(APIView):
+    def post(self, request):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+        file_name = request.data.get("file_name")
+        
+        if not file_name:
+            return Response({"error": "file_name is required"}, status=400)
+
+        file_path = os.path.join("media/normalized", file_name)
+        if not os.path.exists(file_path):
+            return Response({"error": "File not found"}, status=404)
+
+        try:
+            with open(file_path, 'rb') as fh:
+                response = HttpResponse(fh.read(), content_type="application/octet-stream")
+                response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path)
+                return response
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
