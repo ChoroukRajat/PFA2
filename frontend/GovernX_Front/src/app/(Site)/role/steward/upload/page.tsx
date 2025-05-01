@@ -4,6 +4,8 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import StewardLayout from "@/components/Layouts/StewardLayout";
 import { useState, useEffect } from "react";
 import Loader from "@/components/common/Loader";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -42,6 +44,202 @@ const CSVAnalysis = () => {
   const [normalizedColumns, setNormalizedColumns] = useState<Set<string>>(
     new Set(),
   );
+
+  const generatePDFReport = async () => {
+    if (!metadata?.metadata) return;
+
+    setLoading(true);
+
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 10;
+      let yPosition = 20;
+
+      // Set default font
+      pdf.setFont("helvetica", "normal");
+
+      // Add title
+      pdf.setFontSize(18);
+      pdf.setTextColor(0, 0, 0); // Black
+      pdf.text("CSV Analysis Report", pageWidth / 2, yPosition, {
+        align: "center",
+      });
+      yPosition += 15;
+
+      // Add metadata
+      pdf.setFontSize(12);
+      pdf.text(
+        `File: ${metadata.file?.file_name || "Untitled"}`,
+        margin,
+        yPosition,
+      );
+      yPosition += 10;
+      pdf.text(`Generated: ${new Date().toLocaleString()}`, margin, yPosition);
+      yPosition += 15;
+
+      // Helper function to add section with page break check
+      const addSection = (title: string, content: () => void) => {
+        if (yPosition > 270) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        pdf.setFontSize(14);
+        pdf.setTextColor(0, 0, 128); // Navy blue for headings
+        pdf.text(title, margin, yPosition);
+        yPosition += 10;
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0); // Black for content
+        content();
+        yPosition += 10;
+      };
+
+      // 1. Data Types Comparison
+      addSection("Data Types Comparison", () => {
+        if (
+          metadata.metadata.data_types &&
+          metadata.metadata.suggested_data_types
+        ) {
+          const columns = Object.keys(metadata.metadata.data_types);
+
+          // Table headers
+          pdf.setFont("helvetica", "bold");
+          pdf.text("Column", margin, yPosition);
+          pdf.text("Current Type", margin + 60, yPosition);
+          pdf.text("Suggested Type", margin + 120, yPosition);
+          yPosition += 7;
+          pdf.setFont("helvetica", "normal");
+
+          // Table rows
+          columns.forEach((col) => {
+            if (yPosition > 270) {
+              pdf.addPage();
+              yPosition = 20;
+            }
+            pdf.text(col, margin, yPosition);
+            pdf.text(metadata.metadata.data_types[col], margin + 60, yPosition);
+            pdf.text(
+              metadata.metadata.suggested_data_types[col],
+              margin + 120,
+              yPosition,
+            );
+            yPosition += 7;
+          });
+        }
+      });
+
+      // 2. Normalization Suggestions
+      addSection("Normalization Suggestions", () => {
+        if (metadata.metadata.normalization_suggestions) {
+          Object.entries(metadata.metadata.normalization_suggestions).forEach(
+            ([col, suggestion]) => {
+              if (yPosition > 270) {
+                pdf.addPage();
+                yPosition = 20;
+              }
+              pdf.text(`${col}: ${suggestion}`, margin, yPosition);
+              yPosition += 7;
+            },
+          );
+        }
+      });
+
+      // 3. Pattern Detection
+      addSection("Pattern Detection", () => {
+        if (metadata.metadata.pattern_detection) {
+          Object.entries(metadata.metadata.pattern_detection).forEach(
+            ([col, patterns]) => {
+              if (yPosition > 270) {
+                pdf.addPage();
+                yPosition = 20;
+              }
+              const patternsText = Array.isArray(patterns)
+                ? patterns.join(", ")
+                : "None";
+              pdf.text(`${col}: ${patternsText}`, margin, yPosition);
+              yPosition += 7;
+            },
+          );
+        }
+      });
+
+      // 4. Semantic Clusters
+      addSection("Semantic Column Clusters", () => {
+        if (metadata.metadata.semantic_column_clusters) {
+          const clusters: Record<string, string[]> = {};
+
+          // Group columns by cluster
+          Object.entries(metadata.metadata.semantic_column_clusters).forEach(
+            ([col, cluster]) => {
+              if (!clusters[cluster as string]) {
+                clusters[cluster as string] = [];
+              }
+              clusters[cluster as string].push(col);
+            },
+          );
+
+          // Display clusters
+          Object.entries(clusters).forEach(([cluster, columns]) => {
+            if (yPosition > 270) {
+              pdf.addPage();
+              yPosition = 20;
+            }
+            pdf.setFont("helvetica", "bold");
+            pdf.text(`Cluster: ${cluster}`, margin, yPosition);
+            yPosition += 7;
+            pdf.setFont("helvetica", "normal");
+            pdf.text(`Columns: ${columns.join(", ")}`, margin + 5, yPosition);
+            yPosition += 10;
+          });
+        }
+      });
+
+      // 5. Outliers Count
+      addSection("Outliers Count", () => {
+        if (metadata.metadata.outliers) {
+          const filteredData = Object.entries(metadata.metadata.outliers)
+            .filter(([key]) => key !== "customer_id")
+            .filter(([_, value]) => Number(value) > 0);
+
+          filteredData.forEach(([col, count]) => {
+            if (yPosition > 270) {
+              pdf.addPage();
+              yPosition = 20;
+            }
+            pdf.text(`${col}: ${count} outliers`, margin, yPosition);
+            yPosition += 7;
+          });
+        }
+      });
+
+      // 6. Issues Summary
+      addSection("Issues Summary", () => {
+        pdf.text(
+          `Total Duplicates: ${metadata.metadata.duplicates || 0}`,
+          margin,
+          yPosition,
+        );
+        yPosition += 7;
+        const missingCols = Object.values(
+          metadata.metadata.missing_values || {},
+        ).filter((v) => Number(v) > 0).length;
+        pdf.text(
+          `Columns with Missing Values: ${missingCols}`,
+          margin,
+          yPosition,
+        );
+        yPosition += 7;
+      });
+
+      // Save PDF
+      pdf.save(`csv-analysis-report-${new Date().getTime()}.pdf`);
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      alert("Failed to generate PDF report");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Load filename from localStorage on component mount
   useEffect(() => {
@@ -543,7 +741,7 @@ const CSVAnalysis = () => {
       <div className="mx-auto w-full max-w-[970px]">
         <Breadcrumb pageName="CSV Analysis" />
 
-        <div className="mb-6 rounded-lg bg-white p-6 shadow">
+        <div className=" mb-6 rounded-lg bg-white p-6 shadow">
           <div className="mb-4">
             <label className="mb-2 block text-sm font-medium text-gray-700">
               Upload CSV File
@@ -563,101 +761,110 @@ const CSVAnalysis = () => {
           <button
             onClick={handleFileUpload}
             disabled={!file || loading}
-            className="hover:bg-primary-dark rounded bg-primary px-4 py-2 font-medium text-white disabled:opacity-50"
+            className="hover:bg-primary-dark mr-4 rounded bg-primary px-4 py-2 font-medium text-white disabled:opacity-50"
           >
             {loading ? "Analyzing..." : "Analyze CSV"}
+          </button>
+
+          <button
+            onClick={generatePDFReport}
+            disabled={!metadata || loading}
+            className="rounded bg-green-600 px-4 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            {loading ? "Generating PDF..." : "Download PDF Report"}
           </button>
         </div>
 
         {loading && <Loader />}
+        <div id="report-container" className="p-4">
+          {metadata && metadata.metadata && (
+            <div className="space-y-6">
+              <div className="rounded-lg bg-white p-6 shadow">
+                <h2 className="mb-4 text-xl font-semibold">Metadata Summary</h2>
 
-        {metadata && metadata.metadata && (
-          <div className="space-y-6">
-            <div className="rounded-lg bg-white p-6 shadow">
-              <h2 className="mb-4 text-xl font-semibold">Metadata Summary</h2>
+                <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="rounded bg-gray-50 p-4">
+                    <h3 className="mb-2 font-medium">Columns</h3>
+                    <ul className="list-disc pl-5">
+                      {metadata.metadata.columns?.map((col: string) => (
+                        <li key={col}>{col}</li>
+                      ))}
+                    </ul>
+                  </div>
 
-              <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="rounded bg-gray-50 p-4">
-                  <h3 className="mb-2 font-medium">Columns</h3>
-                  <ul className="list-disc pl-5">
-                    {metadata.metadata.columns?.map((col: string) => (
-                      <li key={col}>{col}</li>
-                    ))}
-                  </ul>
+                  <div className="rounded bg-gray-50 p-4">
+                    <h3 className="mb-2 font-medium">Issues</h3>
+                    <p>Duplicates: {metadata.metadata.duplicates || 0}</p>
+                    <p>
+                      Missing values:{" "}
+                      {
+                        Object.values(
+                          metadata.metadata.missing_values || {},
+                        ).filter((v) => (v as number) > 0).length
+                      }{" "}
+                      columns
+                    </p>
+                  </div>
                 </div>
 
-                <div className="rounded bg-gray-50 p-4">
-                  <h3 className="mb-2 font-medium">Issues</h3>
-                  <p>Duplicates: {metadata.metadata.duplicates || 0}</p>
-                  <p>
-                    Missing values:{" "}
-                    {
-                      Object.values(
-                        metadata.metadata.missing_values || {},
-                      ).filter((v) => (v as number) > 0).length
-                    }{" "}
-                    columns
-                  </p>
+                <div className="flex flex-wrap gap-4">
+                  <button
+                    onClick={handleDownloadCurrentFile}
+                    className="rounded bg-blue-500 px-4 py-2 font-medium text-white hover:bg-blue-600"
+                  >
+                    Download {processingStep ? "Processed" : "Original"} File
+                  </button>
+
+                  {(metadata.metadata.duplicates || 0) > 0 && (
+                    <button
+                      onClick={() => setShowDuplicatesModal(true)}
+                      className="rounded bg-red-500 px-4 py-2 font-medium text-white hover:bg-red-600"
+                    >
+                      Remove Duplicates
+                    </button>
+                  )}
+
+                  {Object.values(metadata.metadata.missing_values || {}).some(
+                    (v) => (v as number) > 0,
+                  ) && (
+                    <button
+                      onClick={() => setShowMissingModal(true)}
+                      className="rounded bg-yellow-500 px-4 py-2 font-medium text-white hover:bg-yellow-600"
+                    >
+                      Remove Missing Values
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={handleDownloadCurrentFile}
-                  className="rounded bg-blue-500 px-4 py-2 font-medium text-white hover:bg-blue-600"
-                >
-                  Download {processingStep ? "Processed" : "Original"} File
-                </button>
+              <div className="grid grid-cols-1 gap-6">
+                {renderDataTypesComparison()}
+                {renderNormalizationSuggestions()}
+                {renderPatternDetection()}
+                {renderSemanticClusters()}
+              </div>
 
-                {(metadata.metadata.duplicates || 0) > 0 && (
-                  <button
-                    onClick={() => setShowDuplicatesModal(true)}
-                    className="rounded bg-red-500 px-4 py-2 font-medium text-white hover:bg-red-600"
-                  >
-                    Remove Duplicates
-                  </button>
-                )}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {renderOutliersChart()}
+              </div>
 
-                {Object.values(metadata.metadata.missing_values || {}).some(
-                  (v) => (v as number) > 0,
-                ) && (
+              <div className="rounded-lg bg-white p-6 shadow">
+                <h2 className="mb-4 text-xl font-semibold">Full Metadata</h2>
+                <pre className="overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-4 text-sm">
+                  {display.join("\n")}
+                </pre>
+                {lines.length > 6 && (
                   <button
-                    onClick={() => setShowMissingModal(true)}
-                    className="rounded bg-yellow-500 px-4 py-2 font-medium text-white hover:bg-yellow-600"
+                    onClick={() => setShowMore(!showMore)}
+                    className="mt-2 text-blue-600 hover:underline"
                   >
-                    Remove Missing Values
+                    {showMore ? "Show less " : "Show more "}
                   </button>
                 )}
               </div>
             </div>
-
-            <div className="grid grid-cols-1 gap-6">
-              {renderDataTypesComparison()}
-              {renderNormalizationSuggestions()}
-              {renderPatternDetection()}
-              {renderSemanticClusters()}
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {renderOutliersChart()}
-            </div>
-
-            <div className="rounded-lg bg-white p-6 shadow">
-              <h2 className="mb-4 text-xl font-semibold">Full Metadata</h2>
-              <pre className="overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-4 text-sm">
-                {display.join("\n")}
-              </pre>
-              {lines.length > 6 && (
-                <button
-                  onClick={() => setShowMore(!showMore)}
-                  className="mt-2 text-blue-600 hover:underline"
-                >
-                  {showMore ? "Show less " : "Show more "}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Remove Duplicates Confirmation Modal */}
         {showDuplicatesModal && (

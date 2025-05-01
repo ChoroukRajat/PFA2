@@ -70,3 +70,5 @@ run : npx prisma init
 
 run : npm install chart.js react-chartjs-2
 
+run : npm install html2canvas jspdf
+
