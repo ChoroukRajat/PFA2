@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
-from .serializers import UserSerializer
+from .serializers import UserSerializer, SimpleRegisterSerializer
 from .models import User, Team
 import jwt
 from datetime import datetime, timedelta, UTC, timezone
@@ -68,7 +68,7 @@ class RegisterView(APIView):
             team, _ = Team.objects.get_or_create(name=team_name)
             data['team'] = team.name  # If using SlugRelatedField for 'team'
 
-        serializer = UserSerializer(data=data)
+        serializer = SimpleRegisterSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

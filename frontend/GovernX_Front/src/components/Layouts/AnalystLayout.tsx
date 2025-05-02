@@ -73,8 +73,8 @@ const menuGroup1 = [
             />
           </svg>
         ),
-        label: "Offres Selectionnees",
-        route: "http://localhost:3000/role/CF/offreSelected",
+        label: "Annotation",
+        route: "http://localhost:3000/role/analyst/anotate",
       },
       {
         icon: (

@@ -15,12 +15,17 @@ export default function SignupWithPassword() {
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     try {
-      const response = await fetch("/api/register", {
+      const response = await fetch("http://localhost:8000/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, lastname, firstname }),
+        body: JSON.stringify({
+          email,
+          password,
+          last_name: lastname,
+          first_name: firstname,
+        }),
       });
 
       const data = await response.json();
