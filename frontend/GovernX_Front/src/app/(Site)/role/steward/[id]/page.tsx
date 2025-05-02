@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   // other metadata
 };
 
-const AdminPage = () => {
+const StewardPage = () => {
   return (
     <StewardLayout>
       <div className="mx-auto max-w-7xl">
@@ -18,4 +18,4 @@ const AdminPage = () => {
   );
 };
 
-export default AdminPage;
+export default StewardPage;

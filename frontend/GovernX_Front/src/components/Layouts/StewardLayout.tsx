@@ -32,7 +32,7 @@ const menuGroup1 = [
           </svg>
         ),
         label: "Profile",
-        route: "/role/steward/profile",
+        route: "/role/CF/profile",
       },
       {
         icon: (
@@ -52,8 +52,8 @@ const menuGroup1 = [
             />
           </svg>
         ),
-        label: "Upload",
-        route: "http://localhost:3000/role/steward/upload",
+        label: "Offres",
+        route: "http://localhost:3000/role/CF/offres",
       },
       {
         icon: (
@@ -99,7 +99,7 @@ const menuGroup1 = [
           </svg>
         ),
         label: "Statistics",
-        route: "http://localhost:3000/role/steward/dashboard",
+        route: "http://localhost:3000/role/CF/dashboard",
       },
     ],
   },

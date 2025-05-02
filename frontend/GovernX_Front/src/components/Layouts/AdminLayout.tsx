@@ -52,8 +52,8 @@ const menuGroup1 = [
             />
           </svg>
         ),
-        label: "Uploads",
-        route: "http://localhost:3000/role/admin/uploads",
+        label: "Users Management",
+        route: "http://localhost:3000/role/admin/manage",
       },
       {
         icon: (

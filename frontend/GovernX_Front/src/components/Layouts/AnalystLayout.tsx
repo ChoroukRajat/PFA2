@@ -32,7 +32,7 @@ const menuGroup1 = [
           </svg>
         ),
         label: "Profile",
-        route: "/role/CF/profile",
+        route: "/role/analyst/profile",
       },
       {
         icon: (
@@ -52,8 +52,8 @@ const menuGroup1 = [
             />
           </svg>
         ),
-        label: "Offres",
-        route: "http://localhost:3000/role/CF/offres",
+        label: "Upload",
+        route: "http://localhost:3000/role/analyst/upload",
       },
       {
         icon: (
@@ -99,7 +99,7 @@ const menuGroup1 = [
           </svg>
         ),
         label: "Statistics",
-        route: "http://localhost:3000/role/CF/dashboard",
+        route: "http://localhost:3000/role/analyst/dashboard",
       },
     ],
   },

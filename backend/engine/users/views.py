@@ -11,9 +11,8 @@ from rest_framework.response import Response
 from rest_framework import status
 import random
 import string
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.contrib.auth import get_user_model
+from django.utils.timezone import now
 
 UTC1 = timezone.utc
 
@@ -91,18 +90,22 @@ class LoginView(APIView):
         if not user.check_password(password):
             raise AuthenticationFailed('Incorrect password!')
 
+        if not user.is_active:
+            raise AuthenticationFailed('User is deactivated! Please contact your team manager.')
+
+        # Save the login date
+        user.last_login_date = now().date()
+        user.save(update_fields=['last_login_date'])
+
         payload = {
             'id': user.id,
-            'exp': datetime.now(UTC) + timedelta(minutes=60), 
-            'iat': datetime.now(UTC)  
+            'exp': datetime.now().astimezone() + timedelta(minutes=60),
+            'iat': datetime.now().astimezone()
         }
 
         token = jwt.encode(payload, 'secret', algorithm='HS256')
 
-
         response = Response()
-
-        
         response.data = {
             'token': token,
             'redirectUrl': '/role/' + user.role + '/' + str(user.id),
@@ -227,7 +230,8 @@ class TeamUsersView(APIView):
                 'last_name': user.last_name,
                 'role': user.role,
                 'team_id': team_id,
-                'team_name': team.name
+                'team_name': team.name,
+                'is_active' : user.is_active
             } for user in users]
             
             return Response({'users': data}, status=status.HTTP_200_OK)
@@ -236,3 +240,112 @@ class TeamUsersView(APIView):
             return Response({'error': 'Team not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class ToggleTeamUsersActiveStatusView(APIView):
+    def post(self, request):
+        team_id = request.data.get('team_id')
+        action = request.data.get('action')  # 'activate' or 'deactivate'
+
+        if team_id is None or action not in ['activate', 'deactivate']:
+            return Response({'error': 'Invalid parameters'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            team = Team.objects.get(id=team_id)
+        except Team.DoesNotExist:
+            return Response({'error': 'Team not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        is_active = True if action == 'activate' else False
+        updated_count = User.objects.filter(team=team).update(is_active=is_active)
+
+        return Response({
+            'message': f'{updated_count} user(s) have been {"activated" if is_active else "deactivated"} successfully.'
+        }, status=status.HTTP_200_OK)
+    
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import DataDomain, User, Team
+from .serializers import DataDomainSerializer
+from django.shortcuts import get_object_or_404
+
+# Create data domain
+class CreateDataDomainView(APIView):
+    def post(self, request):
+        serializer = DataDomainSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Update data domain
+class UpdateDataDomainView(APIView):
+    def put(self, request, pk):
+        domain = get_object_or_404(DataDomain, pk=pk)
+        serializer = DataDomainSerializer(domain, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Delete data domain
+class DeleteDataDomainView(APIView):
+    def delete(self, request, pk):
+        domain = get_object_or_404(DataDomain, pk=pk)
+        domain.delete()
+        return Response({"message": "Deleted"}, status=status.HTTP_204_NO_CONTENT)
+
+# Add data domain to user
+class AddDataDomainToUser(APIView):
+    def post(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        domain_id = request.data.get('domain_id')
+        domain = get_object_or_404(DataDomain, id=domain_id)
+        user.data_domains.add(domain)
+        return Response({"message": "Domain added"})
+
+# Remove data domain from user
+class RemoveDataDomainFromUser(APIView):
+    def post(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        domain_id = request.data.get('domain_id')
+        domain = get_object_or_404(DataDomain, id=domain_id)
+        user.data_domains.remove(domain)
+        return Response({"message": "Domain removed"})
+
+# Replace all user's domains
+class ReplaceUserDataDomains(APIView):
+    def post(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        domain_ids = request.data.get('domain_ids', [])
+        user.data_domains.set(domain_ids)
+        return Response({"message": "User's data domains updated"})
+
+
+from rest_framework import generics
+
+class TeamDataDomainListView(generics.ListAPIView):
+    serializer_class = DataDomainSerializer
+
+    def get_queryset(self):
+        team_id = self.kwargs['team_id']
+        team = get_object_or_404(Team, id=team_id)
+        return DataDomain.objects.filter(team=team)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+# In your views.py
+class ToggleUserStatusView(APIView):
+    def post(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            user.is_active = request.data.get('is_active', not user.is_active)
+            user.save()
+            return Response({"message": "User status updated successfully"}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

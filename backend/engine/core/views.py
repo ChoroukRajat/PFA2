@@ -25,7 +25,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import PCA
-from .models import File, FileAction
+from .models import File, FileAction, Metadata,ColumnAnnotation
 
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
@@ -324,6 +324,19 @@ class CSVMetadataView(APIView):
                 semantic_clusters = {col: "general_text" for col in text_columns}
         else:
             semantic_clusters = {col: "general_text" for col in text_columns}
+
+        for col in df.columns:
+            Metadata.objects.create(
+                file=file_record,
+                column_name=col,
+                data_type=data_types.get(col),
+                missing_percentage=(missing_values[col] / len(df)) * 100,
+                is_outlier_present=(outliers.get(col, 0) > 0),
+                suggested_type=suggested_types.get(col),
+                normalization=normalization.get(col),
+                pattern_detected=pattern_detection.get(col),
+                semantic_cluster=semantic_clusters.get(col)
+            )
 
         return Response({
             "file": {"file_name" : file_name},
@@ -906,3 +919,30 @@ class TeamActivityStatsView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class AnnotateColumnView(APIView):
+    def post(self, request):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+
+        metadata_id = request.data.get("metadata_id")
+        category = request.data.get("category")
+        comment = request.data.get("comment", "")
+
+        metadata = Metadata.objects.get(id=metadata_id)
+        annotation, created = ColumnAnnotation.objects.update_or_create(
+            metadata=metadata, user=user,
+            defaults={"category": category, "comment": comment}
+        )
+        return Response({"status": "saved"})
+
+

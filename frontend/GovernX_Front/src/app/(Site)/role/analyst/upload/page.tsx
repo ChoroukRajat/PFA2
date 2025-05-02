@@ -1,7 +1,7 @@
 "use client";
 
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import StewardLayout from "@/components/Layouts/StewardLayout";
+import AnalystLayout from "@/components/Layouts/AnalystLayout";
 import { useState, useEffect } from "react";
 import Loader from "@/components/common/Loader";
 import html2canvas from "html2canvas";
@@ -737,7 +737,7 @@ const CSVAnalysis = () => {
   const display = showMore ? lines : lines.slice(0, 6);
 
   return (
-    <StewardLayout>
+    <AnalystLayout>
       <div className="mx-auto w-full max-w-[970px]">
         <Breadcrumb pageName="CSV Analysis" />
 
@@ -925,7 +925,7 @@ const CSVAnalysis = () => {
           </div>
         )}
       </div>
-    </StewardLayout>
+    </AnalystLayout>
   );
 };
 export default CSVAnalysis;

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'users',
     'corsheaders',
     'core',
+    'atlasHive',
 ]
 
 MIDDLEWARE = [
