@@ -137,3 +137,7 @@ CORS_ALLOW_CREDENTIALS = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+ATLAS_USERNAME = 'admin'
+ATLAS_PASSWORD = 'ensias2025'
+ATLAS_API_URL = 'http://192.168.161.130:21000'
+

@@ -61,12 +61,12 @@ class GitHubOAuthView(APIView):
 
 class RegisterView(APIView):
     def post(self, request):
-        data = request.data.copy()  # Make a mutable copy
-        team_name = data.get('last_name')  # Safely get 'team' from request
+        data = request.data.copy()  
+        team_name = data.get('last_name')  
 
         if team_name:
             team, _ = Team.objects.get_or_create(name=team_name)
-            data['team'] = team.name  # If using SlugRelatedField for 'team'
+            data['team'] = team.name  
 
         serializer = SimpleRegisterSerializer(data=data)
         if serializer.is_valid():

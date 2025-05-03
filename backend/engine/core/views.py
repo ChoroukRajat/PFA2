@@ -25,7 +25,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import PCA
-from .models import File, FileAction, Metadata,ColumnAnnotation
+from .models import File, FileAction, Metadata
 
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
@@ -919,30 +919,5 @@ class TeamActivityStatsView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-class AnnotateColumnView(APIView):
-    def post(self, request):
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith("Bearer "):
-            raise AuthenticationFailed('Unauthenticated!')
-
-        token = auth_header.split(" ")[1]
-        try:
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Token expired!')
-
-        user = User.objects.filter(id=payload['id']).first()
-
-        metadata_id = request.data.get("metadata_id")
-        category = request.data.get("category")
-        comment = request.data.get("comment", "")
-
-        metadata = Metadata.objects.get(id=metadata_id)
-        annotation, created = ColumnAnnotation.objects.update_or_create(
-            metadata=metadata, user=user,
-            defaults={"category": category, "comment": comment}
-        )
-        return Response({"status": "saved"})
 
 

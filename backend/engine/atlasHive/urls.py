@@ -1,18 +1,16 @@
 from django.urls import path
 from .views import (
-    AtlasSearchView,
+    HiveDatabaseView,
+    HiveTableView,
+    HiveColumnView,
     GlossaryView,
-    AnnotationView,
-    ApproveAnnotationView,
-    RejectAnnotationView,
-    UserAnnotationsView
+    MetadataHierarchyView
 )
 
 urlpatterns = [
-    path('atlas/search/<str:entity_type>/', AtlasSearchView.as_view(), name='atlas-search'),
+    path('hive/databases/', HiveDatabaseView.as_view(), name='hive-databases'),
+    path('hive/databases/<str:db_name>/tables/', HiveTableView.as_view(), name='hive-tables'),
+    path('hive/tables/<str:table_name>/columns/', HiveColumnView.as_view(), name='hive-columns'),
     path('glossary/', GlossaryView.as_view(), name='glossary'),
-    path('annotations/', AnnotationView.as_view(), name='annotations'),
-    path('annotations/<int:annotation_id>/approve/', ApproveAnnotationView.as_view(), name='approve-annotation'),
-    path('annotations/<int:annotation_id>/reject/', RejectAnnotationView.as_view(), name='reject-annotation'),
-    path('user/annotations/', UserAnnotationsView.as_view(), name='user-annotations'),
+    path('metadata-hierarchy/', MetadataHierarchyView.as_view(), name='metadata-hierarchy'),
 ]

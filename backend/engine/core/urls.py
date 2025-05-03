@@ -23,7 +23,7 @@ urlpatterns = [
         'teamactivitystats/<int:team_id>/',
         TeamActivityStatsView.as_view()
     ),
-    path('annotate', AnnotateColumnView.as_view()),
+    
 
 
 ]

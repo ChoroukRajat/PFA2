@@ -47,22 +47,3 @@ class Metadata(models.Model):
     class Meta:
         unique_together = ("file", "column_name")
 
-class AnnotationCategory(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    label = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.label} ({self.user.team.name})"
-
-class ColumnAnnotation(models.Model):
-    metadata = models.ForeignKey(Metadata, on_delete=models.CASCADE, related_name="annotations")
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    category = models.ForeignKey(AnnotationCategory, on_delete=models.CASCADE)
-    comment = models.TextField(blank=True)
-    is_approved = models.BooleanField(default=False)  
-    date_created = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ("metadata", "user")
-
-

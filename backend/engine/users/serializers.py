@@ -52,15 +52,28 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 class SimpleRegisterSerializer(serializers.ModelSerializer):
+    team_id = serializers.PrimaryKeyRelatedField(
+        queryset=Team.objects.all(), source='team', required=False
+    )
+    team_name = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = User
-        fields = ['email', 'password', 'first_name', 'last_name']
+        fields = ['email', 'password', 'first_name', 'last_name', 'team_id', 'team_name']
         extra_kwargs = {
             'password': {'write_only': True},
         }
 
     def create(self, validated_data):
-        # Password hashing
+        team = validated_data.pop('team', None)
+        team_name = self.initial_data.get('team_name')
+
+        # Handle team creation or retrieval
+        if not team and team_name:
+            team, _ = Team.objects.get_or_create(name=team_name)
+
+        validated_data['team'] = team
+
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)
