@@ -8,18 +8,22 @@ from .services.atlas_service import AtlasService
 class HiveDatabaseView(APIView):
     def get(self, request):
         # Authentication
+
         auth_header = request.headers.get('Authorization')
+        print("Auth Header:", auth_header)
+
         if not auth_header or not auth_header.startswith("Bearer "):
             raise AuthenticationFailed('Unauthenticated!')
-        
+
+        token = auth_header.split(" ")[1]
+        print("Token:", token)
+
         try:
-            token = auth_header.split(" ")[1]
             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-            user = User.objects.filter(id=payload['id']).first()
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Token expired!')
-        except Exception as e:
-            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.filter(id=payload['id']).first()
 
         # Get data
         atlas_service = AtlasService(user)
@@ -122,3 +126,277 @@ class MetadataHierarchyView(APIView):
         hierarchy = atlas_service.get_full_metadata_hierarchy()
         
         return Response(hierarchy)
+
+
+from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError
+
+from .models import PersonalGlossary, PersonalGlossaryTerm, PersonalAnnotation, Annotation
+from .serializers import (
+    PersonalGlossarySerializer,
+    PersonalGlossaryTermSerializer,
+    PersonalAnnotationSerializer,
+    AnnotationSerializer
+
+)
+
+class PersonalGlossaryListCreateView(generics.ListCreateAPIView):
+    serializer_class = PersonalGlossarySerializer
+
+    def get_queryset(self):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            user = User.objects.filter(id=payload['id']).first()
+        except:
+            return
+        return PersonalGlossary.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            user = User.objects.filter(id=payload['id']).first()
+        except:
+            return
+        serializer.save(user=user)
+
+class PersonalGlossaryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = PersonalGlossarySerializer
+    
+
+    def get_queryset(self):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            user = User.objects.filter(id=payload['id']).first()
+        except:
+            return
+        return PersonalGlossary.objects.filter(user=user)
+
+class PersonalGlossaryTermListCreateView(generics.ListCreateAPIView):
+    serializer_class = PersonalGlossaryTermSerializer
+
+    def get_queryset(self):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            user = User.objects.filter(id=payload['id']).first()
+        except:
+            return
+        glossary_id = self.kwargs['glossary_id']
+        return PersonalGlossaryTerm.objects.filter(
+            glossary_id=glossary_id,
+            glossary__user=user
+        )
+
+    def perform_create(self, serializer):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            user = User.objects.filter(id=payload['id']).first()
+        except:
+            return
+        glossary = PersonalGlossary.objects.filter(
+            id=self.kwargs['glossary_id'],
+            user=user
+        ).first()
+        if not glossary:
+            raise PermissionDenied("You don't have permission to add terms to this glossary")
+        serializer.save(glossary=glossary)
+
+class PersonalGlossaryTermRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = PersonalGlossaryTermSerializer
+
+    def get_queryset(self):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            user = User.objects.filter(id=payload['id']).first()
+        except:
+            return
+        return PersonalGlossaryTerm.objects.filter(
+            glossary__user=user
+        )
+    
+class PersonalGlossaryTermCreateView(generics.CreateAPIView):
+    serializer_class = PersonalGlossaryTermSerializer
+
+    def perform_create(self, serializer):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            user = User.objects.filter(id=payload['id']).first()
+            if not user:
+                raise AuthenticationFailed('User not found!')
+        except:
+            raise AuthenticationFailed('Invalid token!')
+
+        # Get glossary_id from request data directly
+        glossary_id = self.request.data.get('glossary_id')
+        if not glossary_id:
+            raise ValidationError({'glossary_id': 'This field is required.'})
+
+        # Check if the glossary belongs to the user
+        if not PersonalGlossary.objects.filter(id=glossary_id, user=user).exists():
+            raise PermissionDenied("You don't have permission to add terms to this glossary")
+        
+        # Save with the glossary_id
+        serializer.save(glossary_id=glossary_id)
+
+
+
+
+
+
+class PersonalAnnotationRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = PersonalAnnotationSerializer
+    
+    def get_queryset(self):
+        auth_header = self.request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+        if not user:
+            raise AuthenticationFailed('Unauthenticated!')
+        return PersonalAnnotation.objects.filter(user=user)
+
+
+class AnnotationRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = AnnotationSerializer
+    
+    def get_queryset(self):
+        auth_header = self.request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+
+        user = User.objects.filter(id=payload['id']).first()
+        if not user:
+            raise AuthenticationFailed('Unauthenticated!')
+        return Annotation.objects.filter(user=user)
+
+
+from rest_framework import generics
+from rest_framework.exceptions import AuthenticationFailed
+from .models import Annotation, PersonalAnnotation
+from .serializers import AnnotationSerializer, PersonalAnnotationSerializer
+from users.models import User
+import jwt
+
+class AnnotationListCreateView(generics.ListCreateAPIView):
+    serializer_class = AnnotationSerializer
+
+    def get_queryset(self):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+        return Annotation.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+        serializer.save(user=user)
+
+
+class PersonalAnnotationListCreateView(generics.ListCreateAPIView):
+    serializer_class = PersonalAnnotationSerializer
+
+    def get_queryset(self):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+        return PersonalAnnotation.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+        serializer.save(user=user)
