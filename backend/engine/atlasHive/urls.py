@@ -23,4 +23,6 @@ urlpatterns = [
     # Standard Annotations
     path('annotations/', AnnotationListCreateView.as_view(), name='annotations-list'),
     path('annotations/<int:pk>/', AnnotationRetrieveUpdateDestroyView.as_view(), name='annotations-detail'),
+
+    
 ]

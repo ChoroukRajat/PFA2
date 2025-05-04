@@ -1,4 +1,3 @@
-# models.py
 from django.db import models
 from users.models import User
 from django.contrib.postgres.fields import JSONField

@@ -25,5 +25,20 @@ urlpatterns = [
     ),
     
 
+    # Main dashboard endpoint
+    path('dashboard/', UserDashboardView.as_view(), name='user-dashboard'),
+    
+    # File actions endpoints
+    path('dashboard/file-actions/', UserFileActionsView.as_view(), name='user-file-actions'),
+    
+    # Annotations endpoints
+    path('dashboard/annotations/', UserAnnotationsView.as_view(), name='user-annotations'),
+    
+    # Personal annotations endpoints
+    path('dashboard/personal-annotations/', UserPersonalAnnotationsView.as_view(), name='user-personal-annotations'),
+    
+    # Activity timeline
+    path('dashboard/activity/', UserActivityTimelineView.as_view(), name='user-activity-timeline'),
+
 
 ]

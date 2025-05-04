@@ -921,3 +921,365 @@ class TeamActivityStatsView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# analyst dashboard
+from django.db.models import Count, Q
+from django.utils import timezone
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import FileAction
+from atlasHive.models import Annotation, PersonalAnnotation
+from users.models import User
+
+
+
+class UserDashboardView(APIView):
+    """
+    Main dashboard endpoint providing summary statistics for the user
+    """
+    def get(self, request, *args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+        
+        # File actions stats
+        file_actions = FileAction.objects.filter(user=user)
+        total_file_actions = file_actions.count()
+        recent_file_actions = file_actions.order_by('-date')[:5]
+        
+        # Annotations stats
+        annotations = Annotation.objects.filter(user=user)
+        annotation_stats = annotations.values('status').annotate(count=Count('status'))
+        total_annotations = annotations.count()
+        pending_annotations = annotations.filter(status='PENDING').count()
+        
+        # Personal annotations stats
+        personal_annotations = PersonalAnnotation.objects.filter(user=user)
+        personal_annotation_stats = personal_annotations.values('status').annotate(count=Count('status'))
+        total_personal_annotations = personal_annotations.count()
+        
+        # Recent activity (combined)
+        recent_activity = []
+        recent_activity.extend([
+            {
+                'type': 'file_action',
+                'data': {
+                    'source_file': action.source_file.file_name,
+                    'new_file': action.new_file.file_name if action.new_file else None,
+                    'date': action.date,
+                    'description': action.description
+                }
+            } for action in recent_file_actions
+        ])
+        
+        recent_activity.extend([
+            {
+                'type': 'annotation',
+                'data': {
+                    'entity_name': annotation.entity_name,
+                    'term_name': annotation.term_name,
+                    'status': annotation.status,
+                    'created_at': annotation.created_at
+                }
+            } for annotation in annotations.order_by('-created_at')[:3]
+        ])
+        
+        recent_activity.extend([
+            {
+                'type': 'personal_annotation',
+                'data': {
+                    'entity_name': annotation.entity_name,
+                    'term_name': annotation.term.name,
+                    'status': annotation.status,
+                    'created_at': annotation.created_at
+                }
+            } for annotation in personal_annotations.order_by('-created_at')[:3]
+        ])
+        
+        # Sort recent activity by date
+        recent_activity.sort(key=lambda x: x['data']['created_at'] if 'created_at' in x['data'] else x['data']['date'], reverse=True)
+        recent_activity = recent_activity[:5]
+        
+        data = {
+            'file_actions': {
+                'total': total_file_actions,
+                'recent': [
+                    {
+                        'source_file': action.source_file.file_name,
+                        'new_file': action.new_file.file_name if action.new_file else None,
+                        'date': action.date,
+                        'description': action.description
+                    } for action in recent_file_actions
+                ]
+            },
+            'annotations': {
+                'total': total_annotations,
+                'stats': {item['status']: item['count'] for item in annotation_stats},
+                'pending': pending_annotations
+            },
+            'personal_annotations': {
+                'total': total_personal_annotations,
+                'stats': {item['status']: item['count'] for item in personal_annotation_stats}
+            },
+            'recent_activity': recent_activity
+        }
+        
+        return Response(data, status=status.HTTP_200_OK)
+
+class UserFileActionsView(APIView):
+    """
+    Endpoint for user's file actions with filtering capabilities
+    """
+    def get(self, request, *args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+        date_from = request.query_params.get('date_from')
+        date_to = request.query_params.get('date_to')
+        search = request.query_params.get('search')
+        
+        file_actions = FileAction.objects.filter(user=user)
+        
+        # Apply filters
+        if date_from:
+            file_actions = file_actions.filter(date__gte=date_from)
+        if date_to:
+            file_actions = file_actions.filter(date__lte=date_to)
+        if search:
+            file_actions = file_actions.filter(
+                Q(source_file__file_name__icontains=search) |
+                Q(new_file__file_name__icontains=search) |
+                Q(description__icontains=search)
+            )
+        
+        # Pagination would typically be added here
+        data = [
+            {
+                'id': action.id,
+                'source_file': {
+                    'id': action.source_file.id,
+                    'name': action.source_file.file_name
+                },
+                'new_file': {
+                    'id': action.new_file.id if action.new_file else None,
+                    'name': action.new_file.file_name if action.new_file else None
+                },
+                'date': action.date,
+                'description': action.description
+            } for action in file_actions.order_by('-date')
+        ]
+        
+        return Response(data, status=status.HTTP_200_OK)
+
+class UserAnnotationsView(APIView):
+    """
+    Endpoint for user's annotations with filtering and status tracking
+    """
+    def get(self, request, *args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+        status_filter = request.query_params.get('status')
+        date_from = request.query_params.get('date_from')
+        date_to = request.query_params.get('date_to')
+        search = request.query_params.get('search')
+        
+        annotations = Annotation.objects.filter(user=user)
+        
+        # Apply filters
+        if status_filter:
+            annotations = annotations.filter(status=status_filter)
+        if date_from:
+            annotations = annotations.filter(created_at__gte=date_from)
+        if date_to:
+            annotations = annotations.filter(created_at__lte=date_to)
+        if search:
+            annotations = annotations.filter(
+                Q(entity_name__icontains=search) |
+                Q(term_name__icontains=search) |
+                Q(comment__icontains=search)
+            )
+        
+        data = [
+            {
+                'id': annotation.id,
+                'entity': {
+                    'guid': annotation.entity_guid,
+                    'type': annotation.entity_type,
+                    'name': annotation.entity_name
+                },
+                'term': {
+                    'guid': annotation.term_guid,
+                    'name': annotation.term_name
+                },
+                'comment': annotation.comment,
+                'proposed_changes': annotation.proposed_changes,
+                'status': annotation.status,
+                'created_at': annotation.created_at,
+                'updated_at': annotation.updated_at
+            } for annotation in annotations.order_by('-created_at')
+        ]
+        
+        return Response(data, status=status.HTTP_200_OK)
+
+class UserPersonalAnnotationsView(APIView):
+    """
+    Endpoint for user's personal annotations with filtering
+    """
+    def get(self, request, *args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+        status_filter = request.query_params.get('status')
+        date_from = request.query_params.get('date_from')
+        date_to = request.query_params.get('date_to')
+        search = request.query_params.get('search')
+        
+        personal_annotations = PersonalAnnotation.objects.filter(user=user)
+        
+        # Apply filters
+        if status_filter:
+            personal_annotations = personal_annotations.filter(status=status_filter)
+        if date_from:
+            personal_annotations = personal_annotations.filter(created_at__gte=date_from)
+        if date_to:
+            personal_annotations = personal_annotations.filter(created_at__lte=date_to)
+        if search:
+            personal_annotations = personal_annotations.filter(
+                Q(entity_name__icontains=search) |
+                Q(term__name__icontains=search) |
+                Q(comment__icontains=search)
+            )
+        
+        data = [
+            {
+                'id': annotation.id,
+                'entity': {
+                    'guid': annotation.entity_guid,
+                    'type': annotation.entity_type,
+                    'name': annotation.entity_name
+                },
+                'term': {
+                    'id': annotation.term.id,
+                    'name': annotation.term.name
+                },
+                'comment': annotation.comment,
+                'proposed_changes': annotation.proposed_changes,
+                'status': annotation.status,
+                'created_at': annotation.created_at,
+                'updated_at': annotation.updated_at
+            } for annotation in personal_annotations.order_by('-created_at')
+        ]
+        
+        return Response(data, status=status.HTTP_200_OK)
+
+class UserActivityTimelineView(APIView):
+    """
+    Endpoint providing a combined timeline of all user activities
+    """
+    def get(self, request, *args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+        limit = int(request.query_params.get('limit', 20))
+        
+        # Get all activities
+        file_actions = FileAction.objects.filter(user=user).order_by('-date')
+        annotations = Annotation.objects.filter(user=user).order_by('-created_at')
+        personal_annotations = PersonalAnnotation.objects.filter(user=user).order_by('-created_at')
+        
+        # Combine and sort
+        activities = []
+        
+        for action in file_actions:
+            activities.append({
+                'type': 'file_action',
+                'date': action.date,
+                'data': {
+                    'id': action.id,
+                    'source_file': action.source_file.file_name,
+                    'new_file': action.new_file.file_name if action.new_file else None,
+                    'description': action.description
+                }
+            })
+        
+        for annotation in annotations:
+            activities.append({
+                'type': 'annotation',
+                'date': annotation.created_at,
+                'data': {
+                    'id': annotation.id,
+                    'entity_name': annotation.entity_name,
+                    'term_name': annotation.term_name,
+                    'status': annotation.status,
+                    'comment': annotation.comment
+                }
+            })
+        
+        for annotation in personal_annotations:
+            activities.append({
+                'type': 'personal_annotation',
+                'date': annotation.created_at,
+                'data': {
+                    'id': annotation.id,
+                    'entity_name': annotation.entity_name,
+                    'term_name': annotation.term.name,
+                    'status': annotation.status,
+                    'comment': annotation.comment
+                }
+            })
+        
+        # Sort by date
+        activities.sort(key=lambda x: x['date'], reverse=True)
+        
+        return Response(activities[:limit], status=status.HTTP_200_OK)

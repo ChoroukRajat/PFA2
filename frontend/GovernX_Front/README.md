@@ -72,3 +72,6 @@ run : npm install chart.js react-chartjs-2
 
 run : npm install html2canvas jspdf
 
+run : npm install @tanstack/react-query date-fns
+run : npm install react-icons
+
