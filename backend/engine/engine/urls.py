@@ -21,5 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('users.urls')),
     path('api/', include('core.urls')),
-    path('api/', include('atlasHive.urls'))
+    path('api/', include('atlasHive.urls')),
+    path('api/', include('metadata.urls')),
 ]

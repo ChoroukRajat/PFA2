@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'core',
     'atlasHive',
+    'metadata'
 ]
 
 MIDDLEWARE = [

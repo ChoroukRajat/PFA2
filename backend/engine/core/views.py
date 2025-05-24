@@ -228,7 +228,7 @@ class CSVMetadataView(APIView):
             file_name=original_file_name,  
             file_id=file_name,               
             user=user,             
-            date_uploaded=datetime.now(timezone.utc))
+            date_uploaded=datetime.now())
         
     
 
