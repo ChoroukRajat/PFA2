@@ -145,3 +145,51 @@ def store_column(column_entity):
             "full_json": column_entity
         }
     )
+
+
+import re
+
+def normalize_name(name: str) -> str:
+    name = name.lower()
+    name = re.sub(r'[^a-z0-9]', '_', name)
+    name = re.sub(r'_+', '_', name)
+    name = name.strip('_')
+    return name
+
+def normalize_type(type_str: str) -> str:
+    """
+    Normalize the data type string based on Hive SQL conventions.
+    """
+    type_str = type_str.lower().strip()
+
+    # Remove length/precision specifiers like varchar(255), decimal(10,2)
+    type_str = re.sub(r'\(.*?\)', '', type_str).strip()
+
+    hive_type_map = {
+        'tinyint': 'tinyint',
+        'smallint': 'smallint',
+        'int': 'int',
+        'integer': 'int',
+        'bigint': 'bigint',
+        'float': 'float',
+        'double': 'double',
+        'double precision': 'double',
+        'decimal': 'decimal',
+        'numeric': 'decimal',
+
+        'boolean': 'boolean',
+        'bool': 'boolean',
+
+        'string': 'string',
+        'varchar': 'string',
+        'char': 'string',
+        'text': 'string',
+
+        'date': 'date',
+        'timestamp': 'timestamp',
+        'datetime': 'timestamp',
+
+        'binary': 'binary'
+    }
+
+    return hive_type_map.get(type_str, type_str)

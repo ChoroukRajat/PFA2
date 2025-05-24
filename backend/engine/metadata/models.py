@@ -2,6 +2,7 @@
 from django.db import models
 from users.models import User
 
+
     
 class HiveColumn(models.Model):
     guid = models.CharField(max_length=100, unique=True)
@@ -10,6 +11,7 @@ class HiveColumn(models.Model):
     type = models.CharField(max_length=100)
     position = models.IntegerField(null=True, blank=True)
     owner = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     table_guid = models.CharField(max_length=100, null=True, blank=True)
     table_name = models.CharField(max_length=255, null=True, blank=True)
     created_by = models.CharField(max_length=100)
