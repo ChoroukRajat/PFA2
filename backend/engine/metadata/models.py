@@ -2,15 +2,6 @@
 from django.db import models
 from users.models import User
 
-class MetadataEntry(models.Model):
-    guid = models.CharField(max_length=100, unique=True)
-    type_name = models.CharField(max_length=100)
-    name = models.CharField(max_length=200)
-    qualified_name = models.CharField(max_length=500, null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
-    full_json = models.JSONField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
     
 class HiveColumn(models.Model):
     guid = models.CharField(max_length=100, unique=True)
@@ -63,7 +54,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
 class MetadataRecommendation(models.Model):
-    
+
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveBigIntegerField()
     snapshot = GenericForeignKey('content_type', 'object_id')
