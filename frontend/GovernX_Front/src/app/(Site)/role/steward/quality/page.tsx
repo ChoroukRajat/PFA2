@@ -198,23 +198,9 @@ const MetadataQualityPage = () => {
   const fetchRecommendations = async (guid: string) => {
     setLoadingRecommendations(true);
     setError("");
+
     try {
-      // First call the complete metadata endpoint to generate recommendations
-      const completeResponse = await fetch(
-        `http://localhost:8000/api/metadata/complete/${guid}/`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
-      );
-
-      if (!completeResponse.ok) {
-        throw new Error("Failed to generate metadata recommendations");
-      }
-
-      // Then fetch the recommendations
+      // Step 1: Try fetching existing recommendations
       const response = await fetch(
         `http://localhost:8000/api/metadata/recommendations/?guid=${guid}`,
         {
@@ -225,8 +211,44 @@ const MetadataQualityPage = () => {
       );
 
       if (!response.ok) throw new Error("Failed to fetch recommendations");
+
       const data = await response.json();
-      setRecommendations(data);
+
+      // If recommendations exist, use them
+      if (data && data.length > 0) {
+        setRecommendations(data);
+      } else {
+        // Step 2: If empty, call complete endpoint
+        const completeResponse = await fetch(
+          `http://localhost:8000/api/metadata/complete/${guid}/`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        );
+
+        if (!completeResponse.ok) {
+          throw new Error("Failed to generate metadata recommendations");
+        }
+
+        // Step 3: Fetch recommendations again after completion
+        const retryResponse = await fetch(
+          `http://localhost:8000/api/metadata/recommendations/?guid=${guid}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        );
+
+        if (!retryResponse.ok)
+          throw new Error("Failed to fetch recommendations after completion");
+
+        const retryData = await retryResponse.json();
+        setRecommendations(retryData);
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to fetch recommendations",

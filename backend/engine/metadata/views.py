@@ -177,22 +177,26 @@ class CompleteMetadataView(View):
         except Exception as e:
             return JsonResponse({"error": "Failed to parse LLM response", "details": str(e)}, status=500)
 
-
-class UpdateRecommendationStatusView(View):
+@method_decorator(csrf_exempt, name='dispatch')
+class UpdateRecommendationStatusView(APIView):
     def post(self, request, rec_id):
-        try:
-            rec = MetadataRecommendation.objects.get(id=rec_id, snapshot__user=request.user)
-        except MetadataRecommendation.DoesNotExist:
-            return JsonResponse({"error": "Recommendation not found"}, status=404)
-
-        data = json.loads(request.body)
-        status = data.get("status")
-        if status not in ['accepted', 'rejected']:
-            return JsonResponse({"error": "Invalid status"}, status=400)
-
-        rec.status = status
-        rec.save()
-        return JsonResponse({"message": f"Status updated to {status}"})
+        from .models import MetadataRecommendation
+        recommendation = get_object_or_404(MetadataRecommendation, id=rec_id)
+        
+        status_action = request.data.get('status')
+        if status_action not in ['accepted', 'rejected']:
+            return Response(
+                {"error": "Invalid status. Must be 'accepted' or 'rejected'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        recommendation.status = status_action
+        recommendation.save()
+        
+        return Response(
+            {"message": f"Recommendation status updated to {status_action}"},
+            status=status.HTTP_200_OK
+        )
 
 
 class FetchHiveMetadataAPIView(APIView):
