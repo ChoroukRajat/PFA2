@@ -222,6 +222,94 @@ class FetchHiveMetadataAPIView(APIView):
 
 from django.core.exceptions import ObjectDoesNotExist
 
+# class LLMSuggestionsFromColumns(APIView):
+
+#     def post(self, request):
+#         qualified_names = request.data.get("qualified_names", [])
+#         if not qualified_names:
+#             return Response({"error": "No qualified_names provided."}, status=400)
+
+#         metadata_list = []
+#         for qn in qualified_names:
+#             try:
+#                 column = HiveColumn.objects.get(qualified_name=qn)
+#                 metadata_list.append({
+#                     "qualified_name": column.qualified_name,
+#                     "name": column.name,
+#                     "type": column.type,
+#                     "table": column.table_name,
+#                     "description": column.description or ""
+#                 })
+#             except ObjectDoesNotExist:
+#                 return Response({"error": f"Column with qualified_name '{qn}' not found."}, status=404)
+
+#         # Build the LLM prompt
+#         prompt = self.build_prompt(metadata_list)
+
+#         try:
+#             response = requests.post(
+#                 url="https://openrouter.ai/api/v1/chat/completions",
+#                 headers={
+#                     "Authorization": "Bearer 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",
+#                     "Content-Type": "application/json"
+#                 },
+#                 data=json.dumps({
+#                     "model": "deepseek/deepseek-chat-v3-0324:free",
+#                     "messages": [
+#                         {"role": "user", "content": prompt}
+#                     ]
+#                 })
+#             )
+
+#             if response.status_code != 200:
+#                 return Response({
+#                     "error": "LLM call failed",
+#                     "details": response.text
+#                 }, status=response.status_code)
+
+#             completion = response.json()
+#             raw_content = completion["choices"][0]["message"]["content"]
+
+#             # Extract JSON code block using regex
+#             json_match = re.search(r"```json\s*(\{.*?\})\s*```", raw_content, re.DOTALL)
+#             if json_match:
+#                 json_str = json_match.group(1)
+#                 suggestions = json.loads(json_str)
+#                 return Response(suggestions)
+#             else:
+#                 return Response({"error": "No valid JSON block found in LLM response."}, status=500)
+
+#         except Exception as e:
+#             return Response({"error": "LLM call failed", "details": str(e)}, status=500)
+
+#     def build_prompt(self, columns_metadata):
+#         prompt = (
+#             "You are a metadata governance assistant.\n"
+#             "For each column, suggest relevant business tags and identify any potential relationships between columns.\n\n"
+#             "Return a JSON in this format:\n"
+#             "{\n"
+#             "  \"tags\": {\n"
+#             "    \"qualified_name\": [\"Tag1\", \"Tag2\"]\n"
+#             "  },\n"
+#             "  \"relationships\": [\n"
+#             "    {\"from\": \"qualified_name1\", \"to\": \"qualified_name2\", \"type\": \"relationship_type\"}\n"
+#             "  ]\n"
+#             "}\n\n"
+#             "Here is the metadata:\n"
+#         )
+
+#         for col in columns_metadata:
+#             prompt += (
+#                 f"- Qualified Name: {col['qualified_name']}\n"
+#                 f"  Name: {col['name']}\n"
+#                 f"  Type: {col['type']}\n"
+#                 f"  Table: {col['table']}\n"
+#                 f"  Description: {col['description']}\n\n"
+#             )
+
+#         return prompt
+
+
 class LLMSuggestionsFromColumns(APIView):
 
     def post(self, request):
@@ -243,7 +331,6 @@ class LLMSuggestionsFromColumns(APIView):
             except ObjectDoesNotExist:
                 return Response({"error": f"Column with qualified_name '{qn}' not found."}, status=404)
 
-        # Build the LLM prompt
         prompt = self.build_prompt(metadata_list)
 
         try:
@@ -255,29 +342,24 @@ class LLMSuggestionsFromColumns(APIView):
                 },
                 data=json.dumps({
                     "model": "deepseek/deepseek-prover-v2:free",
-                    "messages": [
-                        {"role": "user", "content": prompt}
-                    ]
+                    "messages": [{"role": "user", "content": prompt}]
                 })
             )
 
             if response.status_code != 200:
-                return Response({
-                    "error": "LLM call failed",
-                    "details": response.text
-                }, status=response.status_code)
+                return Response({"error": "LLM call failed", "details": response.text}, status=response.status_code)
 
-            completion = response.json()
-            raw_content = completion["choices"][0]["message"]["content"]
-
-            # Extract JSON code block using regex
+            raw_content = response.json()["choices"][0]["message"]["content"]
             json_match = re.search(r"```json\s*(\{.*?\})\s*```", raw_content, re.DOTALL)
-            if json_match:
-                json_str = json_match.group(1)
-                suggestions = json.loads(json_str)
-                return Response(suggestions)
-            else:
+
+            if not json_match:
                 return Response({"error": "No valid JSON block found in LLM response."}, status=500)
+
+            suggestions = json.loads(json_match.group(1))
+            self.save_tags(suggestions.get("tags", {}))
+            self.save_relationships(suggestions.get("relationships", []))
+
+            return Response(suggestions)
 
         except Exception as e:
             return Response({"error": "LLM call failed", "details": str(e)}, status=500)
@@ -306,5 +388,325 @@ class LLMSuggestionsFromColumns(APIView):
                 f"  Table: {col['table']}\n"
                 f"  Description: {col['description']}\n\n"
             )
-
         return prompt
+
+    def save_tags(self, tag_map):
+        ct = ContentType.objects.get_for_model(HiveColumn)
+        for qualified_name, tags in tag_map.items():
+            try:
+                column = HiveColumn.objects.get(qualified_name=qualified_name)
+                for tag in tags:
+                    MetadataRecommendation.objects.create(
+                        content_type=ct,
+                        object_id=column.id,
+                        field="tags",
+                        suggested_value=tag,
+                        confidence=None,
+                        status="pending"
+                    )
+            except HiveColumn.DoesNotExist:
+                continue
+
+    def save_relationships(self, relationships):
+        ct = ContentType.objects.get_for_model(HiveColumn)
+
+        for rel in relationships:
+            try:
+                source = HiveColumn.objects.get(qualified_name=rel["from"])
+                target = HiveColumn.objects.get(qualified_name=rel["to"])
+                relation_type = rel.get("type", "related")
+
+                # Save recommendation for the source
+                MetadataRecommendation.objects.create(
+                    content_type=ct,
+                    object_id=source.id,
+                    field="relationship",
+                    suggested_value=f"{relation_type} → {target.qualified_name}",
+                    confidence=None,
+                    status="pending"
+                )
+
+                # Optionally: Save reverse recommendation for the target
+                MetadataRecommendation.objects.create(
+                    content_type=ct,
+                    object_id=target.id,
+                    field="relationship",
+                    suggested_value=f"{relation_type} ← {source.qualified_name}",
+                    confidence=None,
+                    status="pending"
+                )
+
+            except HiveColumn.DoesNotExist:
+                continue
+
+
+
+# class LLMClassificationAndRetention(APIView):
+#     def post(self, request):
+#         qualified_names = request.data.get("qualified_names", [])
+#         if not qualified_names:
+#             return Response({"error": "No qualified_names provided."}, status=400)
+
+#         metadata_list = []
+#         for qn in qualified_names:
+#             try:
+#                 column = HiveColumn.objects.get(qualified_name=qn)
+#                 table = HiveTable.objects.get(guid=column.table_guid)
+#                 metadata_list.append({
+#                     "qualified_name": column.qualified_name,
+#                     "name": column.name,
+#                     "type": column.type,
+#                     "description": column.description or "",
+#                     "table_name": table.name,
+#                     "table_description": table.description or "",
+#                     "table_retention": table.retention_period
+#                 })
+#             except HiveColumn.DoesNotExist:
+#                 return Response({"error": f"Column '{qn}' not found."}, status=404)
+#             except HiveTable.DoesNotExist:
+#                 return Response({"error": f"Table for column '{qn}' not found."}, status=404)
+
+#         prompt = self.build_prompt(metadata_list)
+
+#         try:
+#             response = requests.post(
+#                 url="https://openrouter.ai/api/v1/chat/completions",
+#                 headers={
+#                     "Authorization": f"Bearer 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",
+#                     "Content-Type": "application/json"
+#                 },
+#                 data=json.dumps({
+#                     "model": "deepseek/deepseek-prover-v2:free",
+#                     "messages": [{"role": "user", "content": prompt}]
+#                 })
+#             )
+
+#             if response.status_code != 200:
+#                 return Response({"error": "LLM call failed", "details": response.text}, status=response.status_code)
+
+#             content = response.json()["choices"][0]["message"]["content"]
+#             json_block = re.search(r"```json\s*(\{.*?\})\s*```", content, re.DOTALL)
+#             if not json_block:
+#                 return Response({"error": "No valid JSON block found in LLM response."}, status=500)
+
+#             suggestions = json.loads(json_block.group(1))
+#             self.save_classification_recommendations(suggestions.get("classifications", {}))
+#             self.save_retention_recommendations(suggestions.get("retention", {}))
+#             return Response(suggestions)
+
+#         except Exception as e:
+#             return Response({"error": "LLM call failed", "details": str(e)}, status=500)
+
+#     def build_prompt(self, metadata_list):
+#         prompt = (
+#             "You are a metadata governance expert.\n"
+#             "For each column, suggest whether it is public, sensitive, or critical.\n"
+#             "If the table retention_period is null, suggest a suitable retention period in days based on the column types and table description.\n"
+#             "Return a JSON like this:\n"
+#             "{\n"
+#             "  \"classifications\": {\n"
+#             "    \"qualified_name1\": \"sensitive\",\n"
+#             "    \"qualified_name2\": \"critical\"\n"
+#             "  },\n"
+#             "  \"retention\": {\n"
+#             "    \"table_name1\": 180,\n"
+#             "    \"table_name2\": 365\n"
+#             "  }\n"
+#             "}\n\n"
+#             "Here is the metadata:\n"
+#         )
+#         for md in metadata_list:
+#             prompt += (
+#                 f"- Qualified Name: {md['qualified_name']}\n"
+#                 f"  Name: {md['name']}\n"
+#                 f"  Type: {md['type']}\n"
+#                 f"  Description: {md['description']}\n"
+#                 f"  Table: {md['table_name']}\n"
+#                 f"  Table Description: {md['table_description']}\n"
+#                 f"  Retention Period: {md['table_retention']}\n\n"
+#             )
+#         return prompt
+
+#     def save_classification_recommendations(self, classification_map):
+#         ct = ContentType.objects.get_for_model(HiveColumn)
+#         for qualified_name, label in classification_map.items():
+#             try:
+#                 column = HiveColumn.objects.get(qualified_name=qualified_name)
+#                 MetadataRecommendation.objects.create(
+#                     content_type=ct,
+#                     object_id=column.id,
+#                     field="classifications",
+#                     suggested_value=label,
+#                     confidence=None,
+#                     status="pending"
+#                 )
+#             except HiveColumn.DoesNotExist:
+#                 continue
+
+#     def save_retention_recommendations(self, retention_map):
+#         ct = ContentType.objects.get_for_model(HiveTable)
+#         for table_name, retention_days in retention_map.items():
+#             try:
+#                 table = HiveTable.objects.get(name=table_name)
+#                 if table.retention_period is None:
+#                     MetadataRecommendation.objects.create(
+#                         content_type=ct,
+#                         object_id=table.id,
+#                         field="retention_period",
+#                         suggested_value=str(retention_days),
+#                         confidence=None,
+#                         status="pending"
+#                     )
+#             except HiveTable.DoesNotExist:
+#                 continue
+
+class LLMClassificationAndRetention(APIView):
+    def post(self, request):
+        qualified_names = request.data.get("qualified_names", [])
+        if not qualified_names:
+            return Response({"error": "No qualified_names provided."}, status=400)
+
+        metadata_list = []
+        for qn in qualified_names:
+            try:
+                # Try finding it as a HiveColumn first
+                column = HiveColumn.objects.get(qualified_name=qn)
+                table = HiveTable.objects.get(guid=column.table_guid)
+                metadata_list.append({
+                    "qualified_name": column.qualified_name,
+                    "name": column.name,
+                    "type": column.type,
+                    "description": column.description or "",
+                    "table_name": table.name,
+                    "table_description": table.description or "",
+                    "table_retention": table.retention_period
+                })
+
+            except HiveColumn.DoesNotExist:
+                # If not a column, check if it's a HiveTable
+                try:
+                    table = HiveTable.objects.get(qualified_name=qn)
+                    metadata_list.append({
+                        "qualified_name": table.qualified_name,
+                        "name": table.name,
+                        "type": "table",  
+                        "description": table.description or "",
+                        "table_name": table.name,
+                        "table_description": table.description or "",
+                        "table_retention": table.retention_period
+                    })
+                except HiveTable.DoesNotExist:
+                    return Response({"error": f"Neither column nor table found for '{qn}'."}, status=404)
+
+        prompt = self.build_prompt(metadata_list)
+
+        try:
+            response = requests.post(
+                url="https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer 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",
+                    "Content-Type": "application/json"
+                },
+                data=json.dumps({
+                    "model": "deepseek/deepseek-prover-v2:free",
+                    "messages": [{"role": "user", "content": prompt}]
+                })
+            )
+
+            if response.status_code != 200:
+                return Response({"error": "LLM call failed", "details": response.text}, status=response.status_code)
+
+            content = response.json()["choices"][0]["message"]["content"]
+            json_block = re.search(r"```json\s*(\{.*?\})\s*```", content, re.DOTALL)
+            if not json_block:
+                return Response({"error": "No valid JSON block found in LLM response."}, status=500)
+
+            suggestions = json.loads(json_block.group(1))
+            self.save_classification_recommendations(suggestions.get("classifications", {}))
+            self.save_retention_recommendations(suggestions.get("retention", {}))
+            return Response(suggestions)
+
+        except Exception as e:
+            return Response({"error": "LLM call failed", "details": str(e)}, status=500)
+
+    def build_prompt(self, metadata_list):
+        prompt = (
+            "You are a metadata governance expert.\n"
+            "For each column or table, suggest whether it is public, sensitive, or critical.\n"
+            "If a table retention_period is null, suggest a suitable retention period in days based on the column types and table description.\n"
+            "Return a JSON like this:\n"
+            "{\n"
+            "  \"classifications\": {\n"
+            "    \"qualified_name1\": \"sensitive\",\n"
+            "    \"qualified_name2\": \"critical\"\n"
+            "  },\n"
+            "  \"retention\": {\n"
+            "    \"table_name1\": 180,\n"
+            "    \"table_name2\": 365\n"
+            "  }\n"
+            "}\n\n"
+            "Here is the metadata:\n"
+        )
+        for md in metadata_list:
+            prompt += (
+                f"- Qualified Name: {md['qualified_name']}\n"
+                f"  Name: {md['name']}\n"
+                f"  Type: {md['type']}\n"
+                f"  Description: {md['description']}\n"
+                f"  Table: {md['table_name']}\n"
+                f"  Table Description: {md['table_description']}\n"
+                f"  Retention Period: {md['table_retention']}\n\n"
+            )
+        return prompt
+
+    def save_classification_recommendations(self, classification_map):
+        ct_column = ContentType.objects.get_for_model(HiveColumn)
+        ct_table = ContentType.objects.get_for_model(HiveTable)
+
+        for qualified_name, label in classification_map.items():
+            # Try column first
+            try:
+                column = HiveColumn.objects.get(qualified_name=qualified_name)
+                MetadataRecommendation.objects.create(
+                    content_type=ct_column,
+                    object_id=column.id,
+                    field="classifications",
+                    suggested_value=label,
+                    confidence=None,
+                    status="pending"
+                )
+                continue  # Skip to next item once saved for column
+            except HiveColumn.DoesNotExist:
+                pass
+
+            # If not a column, try table
+            try:
+                table = HiveTable.objects.get(qualified_name=qualified_name)
+                MetadataRecommendation.objects.create(
+                    content_type=ct_table,
+                    object_id=table.id,
+                    field="classifications",
+                    suggested_value=label,
+                    confidence=None,
+                    status="pending"
+                )
+            except HiveTable.DoesNotExist:
+                # You may want to log or handle the missing item here
+                continue
+
+    def save_retention_recommendations(self, retention_map):
+        ct = ContentType.objects.get_for_model(HiveTable)
+        for table_name, retention_days in retention_map.items():
+            try:
+                table = HiveTable.objects.get(name=table_name)
+                if table.retention_period is None:
+                    MetadataRecommendation.objects.create(
+                        content_type=ct,
+                        object_id=table.id,
+                        field="retention_period",
+                        suggested_value=str(retention_days),
+                        confidence=None,
+                        status="pending"
+                    )
+            except HiveTable.DoesNotExist:
+                continue

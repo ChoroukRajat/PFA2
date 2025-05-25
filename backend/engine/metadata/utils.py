@@ -100,6 +100,8 @@ def store_table_and_get_column_guids(table_entity):
     if not entity:
         return []
 
+    classification_names = [c.get("typeName") for c in entity.get("classifications", [])]
+
     # Store the table
     HiveTable.objects.update_or_create(
         guid=entity["guid"],
@@ -115,6 +117,8 @@ def store_table_and_get_column_guids(table_entity):
             "db_name": entity.get("relationshipAttributes", {}).get("db", {}).get("displayText"),
             "created_by": entity.get("createdBy"),
             "updated_by": entity.get("updatedBy"),
+            "retention_period": entity.get("retention"),
+            "classifications": classification_names, 
             "full_json": table_entity
         }
     )
@@ -127,6 +131,9 @@ def store_column(column_entity):
     entity = column_entity.get("entity") or (column_entity.get("entities", [{}])[0] if "entities" in column_entity else {})
     if not entity:
         return
+
+    # Extract classification type names only
+    classification_names = [c.get("typeName") for c in entity.get("classifications", [])]
 
     HiveColumn.objects.update_or_create(
         guid=entity["guid"],
@@ -142,9 +149,11 @@ def store_column(column_entity):
             "updated_by": entity.get("updatedBy"),
             "create_time": entity.get("createTime"),
             "update_time": entity.get("updateTime"),
+            "classifications": classification_names,  
             "full_json": column_entity
         }
     )
+
 
 
 import re

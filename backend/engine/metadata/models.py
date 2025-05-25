@@ -18,6 +18,7 @@ class HiveColumn(models.Model):
     updated_by = models.CharField(max_length=100)
     create_time = models.BigIntegerField()
     update_time = models.BigIntegerField()
+    classifications = models.JSONField(null=True, blank=True)
     full_json = models.JSONField()
 
 
@@ -34,6 +35,8 @@ class HiveTable(models.Model):
     db_name = models.CharField(max_length=255, null=True, blank=True)
     created_by = models.CharField(max_length=100)
     updated_by = models.CharField(max_length=100)
+    classifications = models.JSONField(null=True, blank=True)
+    retention_period = models.IntegerField(blank=True, null=True, help_text="Retention in days")
     full_json = models.JSONField()
 
 class HiveDatabase(models.Model):
@@ -73,3 +76,4 @@ class MetadataRecommendation(models.Model):
 
     def __str__(self):
         return f"Suggestion for {self.snapshot}.{self.field} → {self.suggested_value}"
+
