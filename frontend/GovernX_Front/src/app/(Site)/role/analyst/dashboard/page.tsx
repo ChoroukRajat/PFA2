@@ -585,7 +585,7 @@ const DashboardPage = () => {
         />
         <DashboardStatsCard
           icon={<FiTag size={20} />}
-          title="Total Annotations"
+          title="Standard Annotations"
           value={stats?.annotations.total || 0}
           trend="+5%"
         />

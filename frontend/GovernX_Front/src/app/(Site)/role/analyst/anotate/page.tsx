@@ -136,7 +136,7 @@ const DataAnnotationPage = () => {
     setError("");
     try {
       const response = await fetch(
-        "http://localhost:8000/api/hive/databases/",
+        "http://localhost:8000/api/hive/databases1/",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -160,7 +160,7 @@ const DataAnnotationPage = () => {
     setError("");
     try {
       const response = await fetch(
-        `http://localhost:8000/api/hive/databases/${encodeURIComponent(dbName)}/tables/`,
+        `http://localhost:8000/api/hive/databases1/${encodeURIComponent(dbName)}/tables/`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -182,7 +182,7 @@ const DataAnnotationPage = () => {
     setError("");
     try {
       const response = await fetch(
-        `http://localhost:8000/api/hive/tables/${encodeURIComponent(tableName)}/columns/`,
+        `http://localhost:8000/api/hive/tables1/${encodeURIComponent(tableName)}/columns/`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

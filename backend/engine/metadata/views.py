@@ -120,7 +120,7 @@ class CompleteMetadataView(View):
             instance = instance_table
 
         prompt = prepare_llm_prompt_from_snapshot(instance)
-        print("Prompt sent to LLM:", prompt)
+        
 
         response = requests.post(
             url="https://openrouter.ai/api/v1/chat/completions",
@@ -710,3 +710,156 @@ class LLMClassificationAndRetention(APIView):
                     )
             except HiveTable.DoesNotExist:
                 continue
+
+from django.shortcuts import get_object_or_404
+class HiveDatabaseListView(APIView):
+    def get(self, request):
+        databases = HiveDatabase.objects.all().values(
+            'guid', 'name', 'qualified_name', 'description', 'owner'
+        )
+        return Response({
+            'databases': list(databases)
+        }, status=status.HTTP_200_OK)
+
+class HiveDatabaseDetailView(APIView):
+    def get(self, request, db_guid):
+        db = get_object_or_404(HiveDatabase, guid=db_guid)
+        
+        # Convert create_time and update_time to readable format
+        from datetime import datetime
+        create_time = datetime.fromtimestamp(db.create_time/1000).strftime('%Y-%m-%d %H:%M:%S') if db.create_time else None
+        update_time = datetime.fromtimestamp(db.update_time/1000).strftime('%Y-%m-%d %H:%M:%S') if db.update_time else None
+        
+        # Parse full_json if it exists
+        full_json = db.full_json if db.full_json else {}
+        
+        response_data = {
+            'guid': db.guid,
+            'name': db.name,
+            'qualified_name': db.qualified_name,
+            'location': db.location,
+            'owner': db.owner,
+            'description': db.description,
+            'created_by': db.created_by,
+            'updated_by': db.updated_by,
+            'create_time': create_time,
+            'update_time': update_time,
+            'metadata': {
+                'classifications': None,
+                'full_json': full_json
+            }
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+class HiveTableListView(APIView):
+    def get(self, request, db_guid):
+        tables = HiveTable.objects.filter(db_guid=db_guid).values(
+            'guid', 'name', 'qualified_name', 'description', 'table_type', 'owner'
+        )
+        return Response({
+            'tables': list(tables)
+        }, status=status.HTTP_200_OK)
+
+class HiveTableDetailView(APIView):
+    def get(self, request, table_guid):
+        table = get_object_or_404(HiveTable, guid=table_guid)
+        
+        from datetime import datetime
+        create_time = datetime.fromtimestamp(table.create_time/1000).strftime('%Y-%m-%d %H:%M:%S') if table.create_time else None
+        
+        response_data = {
+            'guid': table.guid,
+            'name': table.name,
+            'qualified_name': table.qualified_name,
+            'owner': table.owner,
+            'description': table.description,
+            'temporary': table.temporary,
+            'table_type': table.table_type,
+            'db_guid': table.db_guid,
+            'db_name': table.db_name,
+            'created_by': table.created_by,
+            'updated_by': table.updated_by,
+            'create_time': create_time,
+            'retention_period': table.retention_period,
+            'metadata': {
+                'classifications': table.classifications if table.classifications else None,
+                'full_json': table.full_json if table.full_json else {}
+            }
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+class HiveColumnListView(APIView):
+    def get(self, request, table_guid):
+        columns = HiveColumn.objects.filter(table_guid=table_guid).values(
+            'guid', 'name', 'qualified_name', 'description', 'type', 'position', 'owner'
+        )
+        return Response({
+            'columns': list(columns)
+        }, status=status.HTTP_200_OK)
+
+class HiveColumnDetailView(APIView):
+    def get(self, request, column_guid):
+        column = get_object_or_404(HiveColumn, guid=column_guid)
+        
+        from datetime import datetime
+        create_time = datetime.fromtimestamp(column.create_time/1000).strftime('%Y-%m-%d %H:%M:%S') if column.create_time else None
+        update_time = datetime.fromtimestamp(column.update_time/1000).strftime('%Y-%m-%d %H:%M:%S') if column.update_time else None
+        
+        response_data = {
+            'guid': column.guid,
+            'name': column.name,
+            'qualified_name': column.qualified_name,
+            'type': column.type,
+            'position': column.position,
+            'owner': column.owner,
+            'description': column.description,
+            'table_guid': column.table_guid,
+            'table_name': column.table_name,
+            'created_by': column.created_by,
+            'updated_by': column.updated_by,
+            'create_time': create_time,
+            'update_time': update_time,
+            'metadata': {
+                'classifications': column.classifications if column.classifications else None,
+                'full_json': column.full_json if column.full_json else {}
+            }
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+class MetadataRecommendationQualityListView(APIView):
+    def get(self, request):
+        guid = request.query_params.get('guid', None)
+        if not guid:
+            return Response(
+                {"error": "guid parameter is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        column = get_object_or_404(HiveColumn, guid=guid)
+        content_type = ContentType.objects.get_for_model(HiveColumn)
+
+        from .models import MetadataRecommendation
+
+        # Target fields
+        target_fields = ['description', 'name', 'type', 'owner']
+        latest_recommendations = []
+
+        for field in target_fields:
+            latest = (
+                MetadataRecommendation.objects
+                .filter(
+                    content_type=content_type,
+                    object_id=column.id,
+                    field=field
+                )
+                .order_by('-created_at')
+                .values(
+                    'id', 'field', 'suggested_value', 'confidence', 'status', 'created_at'
+                )
+                .first()
+            )
+            if latest:
+                latest_recommendations.append(latest)
+
+        return Response(latest_recommendations, status=status.HTTP_200_OK)
+

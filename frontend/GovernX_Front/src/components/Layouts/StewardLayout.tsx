@@ -32,7 +32,7 @@ const menuGroup1 = [
           </svg>
         ),
         label: "Profile",
-        route: "/role/CF/profile",
+        route: "/role/steward/profile",
       },
       {
         icon: (
@@ -52,8 +52,8 @@ const menuGroup1 = [
             />
           </svg>
         ),
-        label: "Offres",
-        route: "http://localhost:3000/role/CF/offres",
+        label: "MetaData Quality",
+        route: "http://localhost:3000/role/steward/quality",
       },
       {
         icon: (
@@ -73,8 +73,8 @@ const menuGroup1 = [
             />
           </svg>
         ),
-        label: "Offres Selectionnees",
-        route: "http://localhost:3000/role/CF/offreSelected",
+        label: "Business Tags",
+        route: "http://localhost:3000/role/steward/tags",
       },
       {
         icon: (
