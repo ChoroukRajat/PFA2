@@ -66,6 +66,7 @@ const MetadataQualityPage = () => {
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [columns, setColumns] = useState<Column[]>([]);
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
+  const [showFullMetadata, setShowFullMetadata] = useState(false);
 
   // State for recommendations
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -344,6 +345,12 @@ const MetadataQualityPage = () => {
   const renderMetadataSection = (metadata: any) => {
     if (!metadata) return null;
 
+    // Prepare full metadata string and a preview
+    const fullMetadataString = JSON.stringify(metadata.full_json, null, 2);
+    const metadataLines = fullMetadataString.split("\n");
+    const isLong = metadataLines.length > 10;
+    const previewMetadata = metadataLines.slice(0, 10).join("\n");
+
     return (
       <div className="mt-4">
         <h3 className="text-sm font-medium text-gray-900 dark:text-white">
@@ -374,8 +381,16 @@ const MetadataQualityPage = () => {
                 Full Metadata
               </h4>
               <pre className="mt-1 overflow-x-auto rounded bg-white p-2 text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                {JSON.stringify(metadata.full_json, null, 2)}
+                {showFullMetadata ? fullMetadataString : previewMetadata}
               </pre>
+              {isLong && (
+                <span
+                  onClick={() => setShowFullMetadata(!showFullMetadata)}
+                  className="mt-1 block cursor-pointer text-xs text-blue-600 hover:underline"
+                >
+                  {showFullMetadata ? "See less" : "See more"}
+                </span>
+              )}
             </div>
           )}
         </div>

@@ -76,13 +76,13 @@ class AtlasService:
             )
             return cached.raw_data
 
-    def sync_hive_databases(self):
+    def sync_hive_db(self):
         """Retrieve and store all databases"""
         data = self._make_request("/api/atlas/v2/search/dsl", {"query": "from hive_db"})
         self._store_data('hive_db', data)
         return data.get('entities', [])
 
-    def sync_hive_tables(self):
+    def sync_hive_table(self):
         """Retrieve and store all tables"""
         data = self._make_request("/api/atlas/v2/search/dsl", {"query": "from hive_table"})
         self._store_data('hive_table', data)

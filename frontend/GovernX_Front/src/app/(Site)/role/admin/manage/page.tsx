@@ -827,7 +827,7 @@ export default function TeamDataManagement() {
 
         {/* User Data Domains Management Modal */}
         {selectedUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="z-5000 fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow dark:bg-dark-2">
               <div className="flex justify-between">
                 <h3 className="mb-4 text-xl font-semibold text-dark dark:text-white">
