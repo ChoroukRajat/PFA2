@@ -96,12 +96,21 @@ Le système repose sur une architecture modulaire en trois couches :
     ```bash
         pip install requirements.txt
     ```
+
 5. Configurer la partie Frontend
+    ```bash
+        cd backend/engine
+        python manage.py makemigrations
+        python manage.py migrate
+    ```
+
+
+6. Configurer la partie Frontend
     ```bash
         cd frontend/GovernX_Front
         npm install
     ```
-6. Lancement du projet 
+7. Lancement du projet 
 - Service Backend
     ```bash
         cd backend/engine
