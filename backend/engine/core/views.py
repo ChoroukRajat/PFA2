@@ -1283,3 +1283,148 @@ class UserActivityTimelineView(APIView):
         activities.sort(key=lambda x: x['date'], reverse=True)
         
         return Response(activities[:limit], status=status.HTTP_200_OK)
+
+# views.py
+
+import os
+import pandas as pd
+from pathlib import Path
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+import paramiko
+from scp import SCPClient
+
+# === Hive Data Types Mapping ===
+pandas_to_hive = {
+    'int64': 'INT',
+    'float64': 'FLOAT',
+    'bool': 'BOOLEAN',
+    'object': 'STRING'
+}
+
+def infer_hive_type(dtype):
+    return pandas_to_hive.get(str(dtype), 'STRING')
+
+def generate_hive_table_schema(csv_file_path, table_name):
+    df = pd.read_csv(csv_file_path, nrows=100)
+    columns = ",\n    ".join([
+        f"{col.replace('.', '_').replace(' ', '_')} {infer_hive_type(dtype)}"
+        for col, dtype in df.dtypes.items()
+    ])
+    hql = f"""CREATE EXTERNAL TABLE IF NOT EXISTS {table_name} (
+    {columns}
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+TBLPROPERTIES ("skip.header.line.count"="1");"""
+
+    output_path = Path(f"{table_name}.hql")
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(hql)
+
+    return output_path
+
+def create_ssh_client(host, port, username, password):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(host, port=port, username=username, password=password)
+    return ssh
+
+class HiveUploadView(APIView):
+    def post(self, request):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+        file_name = request.data.get('file_name')
+
+    
+
+        search_dirs = ["media/csv_uploads", "media/duplicates", "media/missingvalue"]
+        csv_path = next((os.path.join(d, file_name) for d in search_dirs if os.path.exists(os.path.join(d, file_name))), None)
+
+        if not csv_path:
+            return Response({"error": "File not found"}, status=404)
+
+        
+        table = request.data.get('table')
+        database = request.data.get('database')
+
+        if not all([csv_path, table, database]):
+            return Response({"error": "Missing one or more required parameters: csv_path, table, database"}, status=400)
+
+        try:
+            host = settings.HIVE_HOST
+            port = getattr(settings, 'HIVE_PORT', 2222)
+            username = settings.HIVE_USER
+            password = settings.HIVE_PASSWORD
+
+            csv_path = os.path.normpath(csv_path)
+            remote_tmp_csv = f"/tmp/hive/{Path(csv_path).name}"
+            hdfs_path = "/user/hive/data"
+            hive_file_path = f"{hdfs_path}/{Path(csv_path).name}"
+            hql_path = generate_hive_table_schema(csv_path, table)
+            remote_hql_path = f"/tmp/hive/{hql_path.name}"
+
+            ssh = create_ssh_client(host, port, username, password)
+
+            with SCPClient(ssh.get_transport()) as scp:
+                scp.put(csv_path, remote_tmp_csv)
+                scp.put(str(hql_path), remote_hql_path)
+
+            hdfs_cmds = [
+                f"su hive -c 'hdfs dfs -mkdir -p {hdfs_path}'",
+                f"su hive -c 'hdfs dfs -put -f {remote_tmp_csv} {hive_file_path}'"
+            ]
+            for cmd in hdfs_cmds:
+                stdin, stdout, stderr = ssh.exec_command(cmd)
+                err = stderr.read().decode()
+                if err:
+                    return Response({"error": err}, status=500)
+
+            hive_cmd = (
+                f"/usr/bin/hive -e \""
+                f"CREATE DATABASE IF NOT EXISTS {database}; "
+                f"USE {database}; "
+                f"SOURCE {remote_hql_path}; "
+                f"LOAD DATA INPATH '{hive_file_path}' INTO TABLE {table};"
+                f"\""
+            )
+            stdin, stdout, stderr = ssh.exec_command(hive_cmd)
+            out = stdout.read().decode()
+            err = stderr.read().decode()
+
+            ssh.close()
+
+            source_file = File.objects.filter(file_name=file_name, user=user).first()
+            if not source_file:
+                source_file = File.objects.create(file_name=file_name, file_id=f"src_{file_name}", user=user)
+
+            FileAction.objects.create(
+                source_file=source_file,
+                new_file=source_file,
+                user=user,
+                description=f"Uploaded to hive"
+            )
+
+            return Response({
+                "message": "Hive automation completed successfully!",
+                "output": out.strip(),
+                "error": err.strip()
+            }, status=200)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+

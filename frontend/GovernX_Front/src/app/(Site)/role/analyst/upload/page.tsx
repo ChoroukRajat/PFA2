@@ -27,6 +27,12 @@ ChartJS.register(
   Legend,
 );
 
+interface Database {
+  name: string;
+  qualified_name: string;
+  metadata: Record<string, any>;
+}
+
 const CSVAnalysis = () => {
   const [metadata, setMetadata] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -34,12 +40,18 @@ const CSVAnalysis = () => {
   const [processing, setProcessing] = useState(false);
   const [showDuplicatesModal, setShowDuplicatesModal] = useState(false);
   const [showMissingModal, setShowMissingModal] = useState(false);
+  const [showHiveUploadModal, setShowHiveUploadModal] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [normalizing, setNormalizing] = useState<Record<string, boolean>>({});
   const [currentFileName, setCurrentFileName] = useState<string | null>(null);
   const [processingStep, setProcessingStep] = useState<
     "duplicates" | "missing" | "normalization" | null
   >(null);
+  const [databases, setDatabases] = useState<Database[]>([]);
+  const [selectedDatabase, setSelectedDatabase] = useState("");
+  const [tableName, setTableName] = useState("");
+  const [hiveUploadLoading, setHiveUploadLoading] = useState(false);
+  const [hiveUploadError, setHiveUploadError] = useState("");
 
   const [normalizedColumns, setNormalizedColumns] = useState<Set<string>>(
     new Set(),
@@ -249,6 +261,30 @@ const CSVAnalysis = () => {
       analyzeFile(savedFilename);
     }
   }, []);
+
+  const fetchDatabases = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8000/api/hive/databases1/",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      if (!response.ok) throw new Error("Failed to fetch databases");
+      const data = await response.json();
+      setDatabases(data.databases);
+    } catch (err) {
+      console.error("Error fetching databases:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (showHiveUploadModal) {
+      fetchDatabases();
+    }
+  }, [showHiveUploadModal]);
 
   const analyzeFile = async (filename: string) => {
     const token = localStorage.getItem("token");
@@ -488,6 +524,48 @@ const CSVAnalysis = () => {
       alert(`Error normalizing ${columnName}`);
     } finally {
       setNormalizing((prev) => ({ ...prev, [columnName]: false }));
+    }
+  };
+
+  const handleHiveUpload = async () => {
+    if (!currentFileName || !selectedDatabase || !tableName) {
+      setHiveUploadError("Please fill all required fields");
+      return;
+    }
+
+    setHiveUploadLoading(true);
+    setHiveUploadError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:8000/api/hive-upload/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          file_name: currentFileName,
+          table: tableName,
+          database: selectedDatabase.split("@")[0], // Extract just the dbname part
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to upload to Hive");
+      }
+
+      const data = await response.json();
+      setShowHiveUploadModal(false);
+      alert("File successfully uploaded to Hive");
+    } catch (error) {
+      console.error("Error uploading to Hive:", error);
+      setHiveUploadError(
+        error instanceof Error ? error.message : "Failed to upload to Hive",
+      );
+    } finally {
+      setHiveUploadLoading(false);
     }
   };
 
@@ -924,21 +1002,99 @@ const CSVAnalysis = () => {
             </div>
           </div>
         )}
-      </div>
-      <button
-                  
-                  className="rounded bg-yellow-500 mx-20 px-4 py-2 font-medium text-white hover:bg-yellow-600 disabled:opacity-50"
-                >
-                 Upload to Hbase 
-                </button>
 
-      <button
-                  
+        {/* Hive Upload Modal */}
+        {showHiveUploadModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+              <h3 className="mb-4 text-lg font-semibold">Upload to Hive</h3>
+              
+              <div className="mb-4">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Database
+                </label>
+                <select
+                  value={selectedDatabase}
+                  onChange={(e) => setSelectedDatabase(e.target.value)}
+                  className="block w-full rounded-md border border-gray-300 p-2 text-sm"
+                >
+                  <option value="">Select a database</option>
+                  {databases.map((db) => (
+                    <option key={db.qualified_name} value={db.qualified_name}>
+                      {db.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Table Name
+                </label>
+                <input
+                  type="text"
+                  value={tableName}
+                  onChange={(e) => setTableName(e.target.value)}
+                  className="block w-full rounded-md border border-gray-300 p-2 text-sm"
+                  placeholder="Enter table name"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  File Name
+                </label>
+                <input
+                  type="text"
+                  value={currentFileName || ""}
+                  readOnly
+                  className="block w-full rounded-md border border-gray-300 bg-gray-100 p-2 text-sm"
+                />
+              </div>
+
+              {hiveUploadError && (
+                <div className="mb-4 text-sm text-red-600">{hiveUploadError}</div>
+              )}
+
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => {
+                    setShowHiveUploadModal(false);
+                    setHiveUploadError("");
+                  }}
+                  className="rounded bg-gray-300 px-4 py-2 font-medium text-gray-800 hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleHiveUpload}
+                  disabled={hiveUploadLoading}
                   className="rounded bg-green-500 px-4 py-2 font-medium text-white hover:bg-green-600 disabled:opacity-50"
                 >
-                 Upload to Hive
+                  {hiveUploadLoading ? "Uploading..." : "Upload"}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="fixed bottom-4 right-4 flex space-x-4">
+        <button
+          className="rounded bg-yellow-500 px-4 py-2 font-medium text-white hover:bg-yellow-600 disabled:opacity-50"
+        >
+          Upload to HBase
+        </button>
+
+        <button
+          onClick={() => setShowHiveUploadModal(true)}
+          className="rounded bg-green-500 px-4 py-2 font-medium text-white hover:bg-green-600 disabled:opacity-50"
+        >
+          Upload to Hive
+        </button>
+      </div>
     </AnalystLayout>
   );
 };
+
 export default CSVAnalysis;

@@ -74,10 +74,11 @@ class SimpleRegisterSerializer(serializers.ModelSerializer):
 
         validated_data['team'] = team
 
+        # REMOVE team_name if still in validated_data
+        validated_data.pop('team_name', None)
+
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)
         user.save()
         return user
-
-# fix this for the team it registers null

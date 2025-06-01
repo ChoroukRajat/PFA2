@@ -40,5 +40,7 @@ urlpatterns = [
     # Activity timeline
     path('dashboard/activity/', UserActivityTimelineView.as_view(), name='user-activity-timeline'),
 
+    path('hive-upload/', HiveUploadView.as_view(), name='hive-upload'),
+
 
 ]

@@ -61,12 +61,11 @@ class GitHubOAuthView(APIView):
 
 class RegisterView(APIView):
     def post(self, request):
-        data = request.data.copy()  
+        data = request.data.copy()
         team_name = data.get('last_name')  
 
         if team_name:
-            team, _ = Team.objects.get_or_create(name=team_name)
-            data['team'] = team.name  
+            data['team_name'] = team_name  
 
         serializer = SimpleRegisterSerializer(data=data)
         if serializer.is_valid():
@@ -75,6 +74,7 @@ class RegisterView(APIView):
         else:
             print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class LoginView(APIView):

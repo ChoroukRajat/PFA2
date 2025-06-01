@@ -28,9 +28,17 @@ export default function SignupWithPassword() {
         }),
       });
 
-      const data = await response.json();
+      const response1 = await fetch("http://localhost:3000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (response.ok) {
+      const data = await response1.json();
+
+      if (response1.ok) {
         // Store token in localStorage
         localStorage.setItem("token", data.token);
         localStorage.setItem("idUtilisateur", data.idUtilisateur);
