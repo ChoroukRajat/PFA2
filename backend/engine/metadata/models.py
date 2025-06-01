@@ -1,6 +1,6 @@
 # models.py
 from django.db import models
-from users.models import User
+from users.models import User, Team
 
 
     
@@ -76,3 +76,13 @@ class MetadataRecommendation(models.Model):
     def __str__(self):
         return f"Suggestion for {self.snapshot}.{self.field} → {self.suggested_value}"
 
+
+class GlossaryTerm(models.Model):
+    term_guid = models.CharField(max_length=100, unique=True)
+    display_text = models.CharField(max_length=255)
+    glossary_name = models.CharField(max_length=255)
+    glossary_guid = models.CharField(max_length=100)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='terms')
+
+    def __str__(self):
+        return self.display_text

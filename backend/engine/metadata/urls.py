@@ -22,4 +22,10 @@ urlpatterns = [
     
     # Recommendation endpoints
     path('metadata/recommendations/', MetadataRecommendationQualityListView.as_view(), name='metadata-recommendations'),
+    path('metadata/recommendations/<uuid:guid>/', MetadataRecommendationListView.as_view(), name='metadata-recommendations-list'),
+    path("sync-terms/", SyncTermsView.as_view(), name="sync_terms"),
+    path("create-term/", CreateTermView.as_view(), name="create_term"),
+    path("assign-term/", AssignTermToColumnView.as_view(), name="assign_term"),
+    path('teams/terms/', TeamTermsView.as_view(), name='team-terms'),
+
 ]

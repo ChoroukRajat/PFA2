@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'core',
     'atlasHive',
-    'metadata'
+    'metadata',
+    'team'
 ]
 
 MIDDLEWARE = [
@@ -142,5 +143,4 @@ ATLAS_USERNAME = 'admin'
 ATLAS_PASSWORD = 'ensias2025'
 ATLAS_API_URL = 'http://192.168.161.130:21000'
 LLM_API_KEY = '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'
-
 

@@ -72,3 +72,35 @@ class AnnotationSerializer(serializers.ModelSerializer):
             'status', 'created_at'
         ]
         read_only_fields = ['id', 'status', 'created_at']
+
+class TeamAnnotationSerializer(AnnotationSerializer):
+    user_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Annotation
+        fields = [
+            'id', 'entity_name', 'entity_type',
+            'term_name', 'comment', 'proposed_changes',
+            'status', 'created_at', 'user_name'
+        ]
+        read_only_fields = ['id', 'status', 'created_at', 'user_name']
+
+    def get_user_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}".strip()
+
+
+class TeamPersonalAnnotationSerializer(PersonalAnnotationSerializer):
+    user_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PersonalAnnotation
+        fields = [
+            'id', 'entity_name', 'entity_type',
+            'term_id', 'term_name', 'glossary_name',
+            'comment', 'proposed_changes', 'status',
+            'created_at', 'user_name'
+        ]
+        read_only_fields = ['id', 'status', 'created_at', 'user_name']
+
+    def get_user_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}".strip()

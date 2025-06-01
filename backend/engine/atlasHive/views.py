@@ -134,13 +134,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError
 
 from .models import PersonalGlossary, PersonalGlossaryTerm, PersonalAnnotation, Annotation
-from .serializers import (
-    PersonalGlossarySerializer,
-    PersonalGlossaryTermSerializer,
-    PersonalAnnotationSerializer,
-    AnnotationSerializer
-
-)
+from .serializers import *
 
 class PersonalGlossaryListCreateView(generics.ListCreateAPIView):
     serializer_class = PersonalGlossarySerializer
@@ -400,3 +394,70 @@ class PersonalAnnotationListCreateView(generics.ListCreateAPIView):
 
         user = User.objects.get(id=payload['id'])
         serializer.save(user=user)
+
+from rest_framework import status
+
+
+class UserAnnotationsView(APIView):
+    def get(self, request):
+
+        auth_header = self.request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid token!')
+
+        user = User.objects.get(id=payload['id'])
+
+        team = user.team
+        team_members = User.objects.filter(team=team)
+
+        annotations = Annotation.objects.filter(user__in=team_members)
+        personal_annotations = PersonalAnnotation.objects.filter(user__in=team_members)
+
+        annotations_serialized = TeamAnnotationSerializer(annotations, many=True)
+        personal_annotations_serialized = TeamPersonalAnnotationSerializer(
+            personal_annotations, many=True, context={'request': request}
+        )
+
+        return Response({
+            "team_id": team.id,
+            "team_name": str(team),
+            "annotations": annotations_serialized.data,
+            "personal_annotations": personal_annotations_serialized.data
+        }, status=status.HTTP_200_OK)
+
+
+class AnnotationStatusUpdateView(APIView):
+
+    def post(self, request, annotation_type, annotation_id, action):
+        if annotation_type == 'personal':
+            model = PersonalAnnotation
+        elif annotation_type == 'atlas':
+            model = Annotation
+        else:
+            return Response({'error': 'Invalid annotation type.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            annotation = model.objects.get(id=annotation_id)
+        except model.DoesNotExist:
+            return Response({'error': 'Annotation not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if action not in ['approve', 'reject']:
+            return Response({'error': 'Invalid action.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # if request.user.role != 'admin' and request.user != annotation.user:
+        #     return Response({'error': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
+
+        annotation.status = 'APPROVED' if action == 'approve' else 'REJECTED'
+        annotation.save()
+
+        return Response({
+            'message': f'Annotation {annotation.id} has been {annotation.status.lower()}.'
+        }, status=status.HTTP_200_OK)

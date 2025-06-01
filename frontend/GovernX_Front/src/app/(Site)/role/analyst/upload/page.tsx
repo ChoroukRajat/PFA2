@@ -925,6 +925,19 @@ const CSVAnalysis = () => {
           </div>
         )}
       </div>
+      <button
+                  
+                  className="rounded bg-yellow-500 mx-20 px-4 py-2 font-medium text-white hover:bg-yellow-600 disabled:opacity-50"
+                >
+                 Upload to Hbase 
+                </button>
+
+      <button
+                  
+                  className="rounded bg-green-500 px-4 py-2 font-medium text-white hover:bg-green-600 disabled:opacity-50"
+                >
+                 Upload to Hive
+                </button>
     </AnalystLayout>
   );
 };

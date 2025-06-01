@@ -23,6 +23,12 @@ urlpatterns = [
     # Standard Annotations
     path('annotations/', AnnotationListCreateView.as_view(), name='annotations-list'),
     path('annotations/<int:pk>/', AnnotationRetrieveUpdateDestroyView.as_view(), name='annotations-detail'),
+    path('steward/annotations/', UserAnnotationsView.as_view(), name='user-annotations'),
+    path(
+        'annotations/<str:annotation_type>/<int:annotation_id>/<str:action>/',
+        AnnotationStatusUpdateView.as_view(),
+        name='annotation-status-update'
+    ),
 
     
 ]

@@ -99,7 +99,7 @@ const menuGroup1 = [
           </svg>
         ),
         label: "Statistics",
-        route: "http://localhost:3000/role/CF/dashboard",
+        route: "http://localhost:3000/role/steward/dashboard",
       },
     ],
   },

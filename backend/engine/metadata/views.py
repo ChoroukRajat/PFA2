@@ -3,8 +3,8 @@ import requests
 from django.http import JsonResponse
 from django.views import View
 from django.conf import settings
-from .models import MetadataRecommendation, HiveColumn, HiveDatabase, HiveTable
-from .utils import prepare_llm_prompt_from_snapshot, fetch_all_hive_metadata, normalize_name, normalize_type
+from .models import MetadataRecommendation, HiveColumn, HiveDatabase, HiveTable, GlossaryTerm
+from .utils import prepare_llm_prompt_from_snapshot, fetch_all_hive_metadata, normalize_name, normalize_type, fetch_terms_from_atlas
 from pyapacheatlas.auth import BasicAuthentication
 from pyapacheatlas.core import AtlasClient, AtlasEntity
 from rest_framework.views import APIView
@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from atlasHive.services.atlas_service import AtlasService
 from rest_framework.exceptions import AuthenticationFailed
 import jwt
-from users.models import User
+from users.models import User, Team
 from rest_framework import status
 
 
@@ -867,3 +867,144 @@ class MetadataRecommendationQualityListView(APIView):
 
         return Response(latest_recommendations, status=status.HTTP_200_OK)
 
+
+
+class MetadataRecommendationListView(APIView):
+    def get(self, request, guid):
+        # First try to find as a column
+        try:
+            entity = HiveColumn.objects.get(guid=guid)
+            content_type = ContentType.objects.get_for_model(HiveColumn)
+        except HiveColumn.DoesNotExist:
+            # If not a column, try as a table
+            try:
+                entity = HiveTable.objects.get(guid=guid)
+                content_type = ContentType.objects.get_for_model(HiveTable)
+            except HiveTable.DoesNotExist:
+                return Response(
+                    {"error": "Entity not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        # Target fields we want to get recommendations for
+        target_fields = ['classifications', 'tags', 'relationship']
+        unique_recommendations = []
+
+        for field in target_fields:
+            # Get all recommendations for this field, ordered by most recent first
+            recommendations = (
+                MetadataRecommendation.objects
+                .filter(
+                    content_type=content_type,
+                    object_id=entity.id,
+                    field=field
+                )
+                .order_by('-created_at')
+                .values(
+                    'id', 'field', 'suggested_value', 'confidence', 'status', 'created_at'
+                )
+            )
+            
+            # Track seen suggested_values to avoid duplicates
+            seen_values = set()
+            for rec in recommendations:
+                if rec['suggested_value'] not in seen_values:
+                    seen_values.add(rec['suggested_value'])
+                    unique_recommendations.append(rec)
+
+        return Response(unique_recommendations, status=status.HTTP_200_OK)
+    
+from .utils import *
+
+class SyncTermsView(APIView):
+    def post(self, request):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            user = User.objects.filter(id=payload['id']).first()
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except Exception as e:
+            raise AuthenticationFailed('Invalid token!')
+        
+        team = user.team
+
+        atlas_terms = fetch_terms_from_atlas()
+        existing_terms = GlossaryTerm.objects.filter(team=team)
+
+        # Delete terms not in Atlas anymore
+        atlas_guids = [term['term_guid'] for term in atlas_terms]
+        existing_terms.exclude(term_guid__in=atlas_guids).delete()
+
+        # Update or create
+        for term_data in atlas_terms:
+            GlossaryTerm.objects.update_or_create(
+                term_guid=term_data["term_guid"],
+                defaults={
+                    "display_text": term_data["name"],
+                    "glossary_name": "Glossary",
+                    "glossary_guid": term_data["glossary_guid"],
+                    "team": team
+                }
+            )
+
+        return Response({"message": "Terms synchronized with Atlas."})
+    
+
+class CreateTermView(APIView):
+    def post(self, request):
+        term_name = request.data.get("name")
+        #glossary_guid = request.data.get("glossary_guid")  
+        glossary_guid = "d68dea01-5412-45bf-86cf-56d2e14bcc67"
+        team_id = request.data.get("team_id")
+
+        # Create in Atlas
+        atlas_term = create_term_in_atlas(term_name, glossary_guid)
+
+        # Create in DB
+        team = Team.objects.get(id=team_id)
+        GlossaryTerm.objects.create(
+            term_guid=atlas_term["guid"],
+            display_text=atlas_term["name"],
+            glossary_name="Glossary",
+            glossary_guid=glossary_guid,
+            team=team
+        )
+
+        return Response({"message": "Term created in Atlas and DB."})
+    
+class AssignTermToColumnView(APIView):
+    def post(self, request):
+        term_guid = request.data.get("term_guid")
+        qualifiedName = request.data.get("qualifiedName")
+
+        result = assign_term_to_column(term_guid, qualifiedName)
+
+        return Response({"message": "Term assigned to column.", "result": result})
+
+from .serializers import GlossaryTermSerializer
+
+class TeamTermsView(APIView):
+    def get(self, request):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            user = User.objects.filter(id=payload['id']).first()
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired!')
+        except Exception as e:
+            raise AuthenticationFailed('Invalid token!')
+        
+        team = user.team
+
+        terms = GlossaryTerm.objects.filter(team=team)
+        serializer = GlossaryTermSerializer(terms, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

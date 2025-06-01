@@ -53,27 +53,27 @@ class AtlasService:
         """Helper to get cached data or refresh if needed"""
         try:
             if (data_type=="hive_columns"):
-                cached = AtlasDataCache.objects.get(
+                cached = AtlasDataCache.objects.filter(
                 user=self.user,
                 data_type="hive_column",
                 is_changed=False
-            )
+            ).order_by('-id').first()
             else:
-                cached = AtlasDataCache.objects.get(
+                cached = AtlasDataCache.objects.filter(
                     user=self.user,
                     data_type=data_type,
                     is_changed=False
-                )
+                ).order_by('-id').first()
             return cached.raw_data
         except AtlasDataCache.DoesNotExist:
             # If not found or changed, sync fresh data
             sync_method = getattr(self, f'sync_{data_type}')
             sync_method()
-            cached = AtlasDataCache.objects.get(
+            cached = AtlasDataCache.objects.filter(
                 user=self.user,
                 data_type=data_type,
                 is_changed=False
-            )
+            ).order_by('-id').first()
             return cached.raw_data
 
     def sync_hive_db(self):

@@ -23,4 +23,5 @@ urlpatterns = [
     path('api/', include('core.urls')),
     path('api/', include('atlasHive.urls')),
     path('api/', include('metadata.urls')),
+    path('api/', include('team.urls')),
 ]

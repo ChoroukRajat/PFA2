@@ -202,3 +202,69 @@ def normalize_type(type_str: str) -> str:
     }
 
     return hive_type_map.get(type_str, type_str)
+
+
+
+from pyapacheatlas.core import AtlasClient
+from pyapacheatlas.core.util import GuidTracker
+
+atlas_url = settings.ATLAS_API_URL + "/api/atlas/v2"
+username = settings.ATLAS_USERNAME
+password = settings.ATLAS_PASSWORD
+
+auth = BasicAuthentication(username=username, password=password)
+atlas_client = AtlasClient(endpoint_url=atlas_url, authentication=auth)
+
+def fetch_terms_from_atlas():
+    glossary = atlas_client.glossary.get_glossary()
+    # Confirm glossary is dict and contains 'terms'
+    if isinstance(glossary, dict) and "terms" in glossary:
+        terms_data = []
+        for term in glossary["terms"]:
+            term_guid = term.get("termGuid")
+            term_name = term.get("displayText")
+            relation_guid = term.get("relationGuid")
+
+            # Save or process each term as needed
+            print("Parsed Term:", term_guid, term_name, relation_guid)
+
+            # Example structure
+            terms_data.append({
+                "term_guid": term_guid,
+                "name": term_name,
+                "relation_guid": relation_guid,
+                "glossary_guid": glossary["guid"]
+            })
+
+        return terms_data
+
+    else:
+        raise ValueError("Glossary format is incorrect or missing terms")
+
+from pyapacheatlas.core.glossary import AtlasGlossaryTerm
+
+def create_term_in_atlas(name, glossary_guid):
+
+    term = AtlasGlossaryTerm(
+        name=name,
+        glossaryGuid=glossary_guid,
+        qualifiedName=f"{name}@Glossary"  # or another qualifiedName format
+    )
+    response = atlas_client.glossary.upload_term(term)
+    print(response)
+    return response
+
+def assign_term_to_column(term_guid, qualifiedName):
+    entity_json = atlas_client.get_entity(qualifiedName=qualifiedName)
+    
+    # Create an AtlasEntity from the retrieved JSON
+    entity = AtlasEntity.from_json(entity_json)
+    
+    # Assign the term to the entity
+    result = atlas_client.glossary.assignTerm(
+        entities=[entity],
+        termGuid=term_guid
+    )
+    
+    return result
+

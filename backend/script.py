@@ -117,5 +117,5 @@ def load_csv_to_hbase():
         ssh.close()
         print("Connexions fermées")
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     load_csv_to_hbase()
