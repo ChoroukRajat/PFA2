@@ -64,9 +64,20 @@ class AtlasService:
                     data_type=data_type,
                     is_changed=False
                 ).order_by('-id').first()
+                if cached is None:
+                    self.sync_hive_db()
+                    self.sync_hive_table()
+                    self.sync_hive_columns()
+                    self.sync_glossary()
+                    cached = AtlasDataCache.objects.filter(
+                        user=self.user,
+                        data_type=data_type,
+                        is_changed=False
+                        ).order_by('-id').first()
             return cached.raw_data
         except AtlasDataCache.DoesNotExist:
             # If not found or changed, sync fresh data
+            
             sync_method = getattr(self, f'sync_{data_type}')
             sync_method()
             cached = AtlasDataCache.objects.filter(

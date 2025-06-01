@@ -22,6 +22,7 @@ import { FiFile, FiTag, FiUser, FiClock, FiFilter } from "react-icons/fi";
 // Initialize QueryClient
 const queryClient = new QueryClient();
 
+// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -31,7 +32,7 @@ ChartJS.register(
   Tooltip,
   Legend,
   PointElement,
-  LineElement,
+  LineElement
 );
 
 interface FileAction {
@@ -87,21 +88,34 @@ interface PersonalAnnotation {
 interface DashboardStats {
   file_actions: {
     total: number;
-    pending: number;
-    completed: number;
+    recent: {
+      source_file: string;
+      new_file: string | null;
+      date: string;
+      description: string;
+    }[];
   };
   annotations: {
     total: number;
+    stats: {
+      APPROVED?: number;
+      PENDING?: number;
+      REJECTED?: number;
+    };
     pending: number;
-    approved: number;
-    rejected: number;
   };
   personal_annotations: {
     total: number;
-    pending: number;
-    approved: number;
-    rejected: number;
+    stats: {
+      APPROVED?: number;
+      PENDING?: number;
+      REJECTED?: number;
+    };
   };
+  recent_activity: {
+    type: string;
+    data: any;
+  }[];
 }
 
 const API_BASE_URL = "http://localhost:8000/api";
@@ -175,8 +189,17 @@ const fetchPersonalAnnotations = async (params?: {
   if (params?.search) queryParams.append("search", params.search);
 
   return fetchWithAuth(
-    `/dashboard/personal-annotations/?${queryParams.toString()}`,
+    `/dashboard/personal-annotations/?${queryParams.toString()}`
   );
+};
+
+const fetchActivityTimeline = async (params?: {
+  limit?: number;
+}): Promise<any[]> => {
+  const queryParams = new URLSearchParams();
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+
+  return fetchWithAuth(`/dashboard/activity/?${queryParams.toString()}`);
 };
 
 const DashboardStatsCard = ({
@@ -208,15 +231,11 @@ const DashboardStatsCard = ({
   </div>
 );
 
-const ActivityItemComponent = ({
-  item,
-}: {
-  item: FileAction | Annotation | PersonalAnnotation;
-}) => {
+const ActivityItemComponent = ({ item }: { item: any }) => {
   const getIcon = () => {
-    if ("source_file" in item) {
+    if (item.type === "file_action") {
       return <FiFile className="text-blue-500" />;
-    } else if ("term" in item && "guid" in item.term) {
+    } else if (item.type === "annotation") {
       return <FiTag className="text-green-500" />;
     } else {
       return <FiUser className="text-purple-500" />;
@@ -224,37 +243,34 @@ const ActivityItemComponent = ({
   };
 
   const getDescription = () => {
-    if ("source_file" in item) {
-      // File Action
+    if (item.type === "file_action") {
       return (
         <>
-          <span className="font-medium">File action:</span> {item.description}
+          <span className="font-medium">File action:</span> {item.data.description}
           <div className="mt-1 text-sm text-gray-500">
-            {item.source_file.name} → {item.new_file?.name || "No target file"}
+            {item.data.source_file} → {item.data.new_file || "No target file"}
           </div>
         </>
       );
-    } else if ("term" in item && "guid" in item.term) {
-      // Annotation
+    } else if (item.type === "annotation") {
       return (
         <>
-          <span className="font-medium">Annotation:</span> {item.entity.name}{" "}
-          tagged with {item.term.name}
+          <span className="font-medium">Annotation:</span>{" "}
+          {item.data.entity_name || item.data.entity?.name || "N/A"} tagged with{" "}
+          {item.data.term_name || item.data.term?.name || "N/A"}
           <div className="mt-1 text-sm text-gray-500">
-            Status:{" "}
-            <span className="capitalize">{item.status.toLowerCase()}</span>
+            Status: <span className="capitalize">{item.data.status?.toLowerCase() || "unknown"}</span>
           </div>
         </>
       );
     } else {
-      // Personal Annotation
       return (
         <>
           <span className="font-medium">Personal Annotation:</span>{" "}
-          {item.entity.name} tagged with {item.term.name}
+          {item.data.entity_name || item.data.entity?.name || "N/A"} tagged with{" "}
+          {item.data.term_name || item.data.term?.name || "N/A"}
           <div className="mt-1 text-sm text-gray-500">
-            Status:{" "}
-            <span className="capitalize">{item.status.toLowerCase()}</span>
+            Status: <span className="capitalize">{item.data.status?.toLowerCase() || "unknown"}</span>
           </div>
         </>
       );
@@ -262,11 +278,7 @@ const ActivityItemComponent = ({
   };
 
   const getDate = () => {
-    if ("date" in item) {
-      return item.date;
-    } else {
-      return item.created_at;
-    }
+    return item.data.date || item.data.created_at || "";
   };
 
   return (
@@ -274,9 +286,11 @@ const ActivityItemComponent = ({
       <div className="mr-3 rounded-full bg-gray-50 p-2">{getIcon()}</div>
       <div className="flex-1">
         <div className="text-sm">{getDescription()}</div>
-        <div className="mt-1 text-xs text-gray-400">
-          {format(new Date(getDate()), "MMM d, yyyy h:mm a")}
-        </div>
+        {getDate() && (
+          <div className="mt-1 text-xs text-gray-400">
+            {format(new Date(getDate()), "MMM d, yyyy h:mm a")}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -345,8 +359,17 @@ const DashboardPage = () => {
       }),
   });
 
+  const {
+    data: activityTimeline,
+    isLoading: activityTimelineLoading,
+    error: activityTimelineError,
+  } = useQuery<any[]>({
+    queryKey: ["activity-timeline", activityLimit],
+    queryFn: () => fetchActivityTimeline({ limit: activityLimit }),
+  });
+
   const handleFilterChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -361,12 +384,14 @@ const DashboardPage = () => {
     statsLoading ||
     fileActionsLoading ||
     annotationsLoading ||
-    personalAnnotationsLoading;
+    personalAnnotationsLoading ||
+    activityTimelineLoading;
   const error =
     statsError ||
     fileActionsError ||
     annotationsError ||
-    personalAnnotationsError;
+    personalAnnotationsError ||
+    activityTimelineError;
 
   if (error) {
     return (
@@ -399,45 +424,25 @@ const DashboardPage = () => {
     );
   }
 
-  // Combine all activities for the timeline
-  const allActivities = [
-    ...(fileActions?.map((action) => ({ ...action, type: "file_action" })) ||
-      []),
-    ...(annotations?.map((annotation) => ({
-      ...annotation,
-      type: "annotation",
-    })) || []),
-    ...(personalAnnotations?.map((annotation) => ({
-      ...annotation,
-      type: "personal_annotation",
-    })) || []),
-  ]
-    .sort((a, b) => {
-      const dateA = "date" in a ? new Date(a.date) : new Date(a.created_at);
-      const dateB = "date" in b ? new Date(b.date) : new Date(b.created_at);
-      return dateB.getTime() - dateA.getTime();
-    })
-    .slice(0, activityLimit);
-
-  // Prepare chart data
+  // Prepare chart data based on the API response structure
   const annotationStatusData = {
-    labels: ["Pending", "Approved", "Rejected"],
+    labels: ["Approved", "Pending", "Rejected"],
     datasets: [
       {
         label: "Annotations",
         data: [
-          stats?.annotations.pending || 0,
-          stats?.annotations.approved || 0,
-          stats?.annotations.rejected || 0,
+          stats?.annotations.stats.APPROVED || 0,
+          stats?.annotations.stats.PENDING || 0,
+          stats?.annotations.stats.REJECTED || 0,
         ],
         backgroundColor: [
-          "rgba(255, 159, 64, 0.7)",
           "rgba(75, 192, 192, 0.7)",
+          "rgba(255, 159, 64, 0.7)",
           "rgba(255, 99, 132, 0.7)",
         ],
         borderColor: [
-          "rgba(255, 159, 64, 1)",
           "rgba(75, 192, 192, 1)",
+          "rgba(255, 159, 64, 1)",
           "rgba(255, 99, 132, 1)",
         ],
         borderWidth: 1,
@@ -446,23 +451,23 @@ const DashboardPage = () => {
   };
 
   const personalAnnotationStatusData = {
-    labels: ["Pending", "Approved", "Rejected"],
+    labels: ["Approved", "Pending", "Rejected"],
     datasets: [
       {
         label: "Personal Annotations",
         data: [
-          stats?.personal_annotations.pending || 0,
-          stats?.personal_annotations.approved || 0,
-          stats?.personal_annotations.rejected || 0,
+          stats?.personal_annotations.stats.APPROVED || 0,
+          stats?.personal_annotations.stats.PENDING || 0,
+          stats?.personal_annotations.stats.REJECTED || 0,
         ],
         backgroundColor: [
-          "rgba(153, 102, 255, 0.7)",
           "rgba(54, 162, 235, 0.7)",
+          "rgba(153, 102, 255, 0.7)",
           "rgba(255, 206, 86, 0.7)",
         ],
         borderColor: [
-          "rgba(153, 102, 255, 1)",
           "rgba(54, 162, 235, 1)",
+          "rgba(153, 102, 255, 1)",
           "rgba(255, 206, 86, 1)",
         ],
         borderWidth: 1,
@@ -470,7 +475,6 @@ const DashboardPage = () => {
     ],
   };
 
-  // Prepare activity over time data (example - you might want to aggregate by month)
   const activityOverTimeData = {
     labels: ["File Actions", "Annotations", "Personal Annotations"],
     datasets: [
@@ -545,9 +549,9 @@ const DashboardPage = () => {
               className="w-full rounded-md border border-gray-300 p-2"
             >
               <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
             </select>
           </div>
           <div>
@@ -600,7 +604,7 @@ const DashboardPage = () => {
           title="Pending Approvals"
           value={
             (stats?.annotations.pending || 0) +
-            (stats?.personal_annotations.pending || 0)
+            (stats?.personal_annotations.stats.PENDING || 0)
           }
         />
       </div>
@@ -719,9 +723,9 @@ const DashboardPage = () => {
               ))}
             </div>
           ) : (
-            allActivities.map((item, index) => (
+            activityTimeline?.map((item, index) => (
               <ActivityItemComponent key={index} item={item} />
-            ))
+            )) || []
           )}
         </div>
       </div>

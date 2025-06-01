@@ -256,17 +256,18 @@ class PersonalGlossaryTermCreateView(generics.CreateAPIView):
         except:
             raise AuthenticationFailed('Invalid token!')
 
-        # Get glossary_id from request data directly
         glossary_id = self.request.data.get('glossary_id')
         if not glossary_id:
             raise ValidationError({'glossary_id': 'This field is required.'})
 
-        # Check if the glossary belongs to the user
-        if not PersonalGlossary.objects.filter(id=glossary_id, user=user).exists():
+        try:
+            glossary = PersonalGlossary.objects.get(id=glossary_id, user=user)
+        except PersonalGlossary.DoesNotExist:
             raise PermissionDenied("You don't have permission to add terms to this glossary")
-        
-        # Save with the glossary_id
-        serializer.save(glossary_id=glossary_id)
+
+        # ✅ Pass the actual glossary object, not `glossary_id`
+        serializer.save(glossary=glossary)
+
 
 
 
